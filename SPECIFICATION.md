@@ -16,7 +16,7 @@ myDeck est une application web de création et de présentation de slides type P
 |-------|------|------|
 | `#/create` | Création | Éditeur Markdown + éditeur CSS à gauche (chacun ½ hauteur), aperçu WYSIWYG à droite |
 | `#/` | Visualisation | Présentation plein écran, navigation, impression |
-| `#/deck` | Deck | Menu deck : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Exporter, Paramètres |
+| `#/deck` | Slides | Menu slides : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Exporter, Paramètres |
 | `#/settings` | Paramétrage | Thème, gestion des decks, import/export JSON |
 
 ### 2.2 Modules
@@ -70,7 +70,7 @@ Deux modes, réglés depuis la **page Paramètres** et persistés dans `settings
 - Barre de progression + compteur ; deep-link `#4` (slide 4).
 - `Ctrl+P` : impression une slide par page (`#print-deck` + `page-break-after`).
 
-## 5. Page Deck (`#/deck`)
+## 5. Page Slides (`#/deck`)
 
 **Modèle de persistance** :
 - **Cache de travail** : le deck en cours vit dans le navigateur (localStorage, cf. §store.js) — modification et prévisualisation sans écriture disque.

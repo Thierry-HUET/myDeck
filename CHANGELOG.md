@@ -2,6 +2,12 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.8.0] — 2026-10-10
+
+### Modifié
+
+- **Menu renommé « Deck » → « Slides »** et repositionné dans la barre supérieure : à gauche, juste après le titre myDeck (Création et Visualisation restent à droite). La route `#/deck` est inchangée ; le titre de la page devient « Slides ».
+
 ## [0.7.2] — 2026-10-10
 
 ### Corrigé

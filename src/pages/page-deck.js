@@ -1,5 +1,5 @@
 /* ============================================================
-   page-deck.js — menu Deck
+   page-deck.js — menu Slides
    Nouveau · Ouvrir (.mdk) · Enregistrer · Enregistrer sous ·
    Exporter (.zip) ──────────── · Paramètres
    Cache de travail : navigateur (localStorage).
@@ -21,7 +21,7 @@ const ICONS = {
 export function mount(app) {
   app.innerHTML = `
     <div class="deck-page">
-      <h2>Deck</h2>
+      <h2>Slides</h2>
       <p id="d-status" class="deck-status"></p>
 
       <section class="card">
