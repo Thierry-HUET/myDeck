@@ -96,26 +96,86 @@ select, input[type="text"], input:not([type]) {
 }
 
 /* ---------- Page Création ---------- */
+/* mode-horizontal : [ éditeurs empilés | splitter | WYSIWYG ]
+   mode-vertical   : [ WYSIWYG | splitter | éditeurs côte à côte ] */
 
 .create-page {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
+  display: flex;
+  gap: 8px;
   height: 100%;
   padding: 12px;
-}
-
-.editors {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
   min-height: 0;
 }
+
+.mode-horizontal { flex-direction: row; }
+.mode-vertical   { flex-direction: column; }
+
+/* ordre des blocs : en vertical, l'affichage passe en haut */
+.mode-horizontal .editors     { order: 1; }
+.mode-horizontal .main-split  { order: 2; }
+.mode-horizontal .preview     { order: 3; }
+.mode-vertical   .preview     { order: 1; }
+.mode-vertical   .main-split  { order: 2; }
+.mode-vertical   .editors     { order: 3; }
+
+/* ---- dimensionnement piloté par les variables --main / --sub ---- */
+
+.editors {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.mode-horizontal .editors {
+  flex: none;
+  flex-direction: column;
+  width: var(--main, 50%);
+}
+.mode-vertical .editors {
+  flex: 1;
+  flex-direction: row;
+}
+
+.mode-horizontal .preview { flex: 1; min-width: 0; }
+.mode-vertical   .preview { flex: none; height: var(--main, 50%); min-height: 0; }
+
+.editor { flex: 1; min-height: 0; min-width: 0; }
+.mode-horizontal .editor:first-of-type { flex: none; height: var(--sub, 50%); }
+.mode-vertical   .editor:first-of-type { flex: none; width: var(--sub, 50%); }
+
+/* ---- splitters redimensionnables ---- */
+
+.splitter {
+  flex: none;
+  position: relative;
+  touch-action: none;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.splitter span {
+  display: block;
+  background: var(--border);
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.splitter:hover span, .splitter.active span { background: var(--accent); }
+
+.mode-horizontal .main-split { width: 7px; cursor: col-resize; }
+.mode-horizontal .main-split span { width: 4px; height: 90%; }
+.mode-vertical .main-split { height: 7px; cursor: row-resize; }
+.mode-vertical .main-split span { width: 90%; height: 4px; }
+
+.mode-horizontal .sub-split { height: 7px; cursor: row-resize; }
+.mode-horizontal .sub-split span { width: 90%; height: 4px; }
+.mode-vertical .sub-split { width: 7px; cursor: col-resize; }
+.mode-vertical .sub-split span { width: 4px; height: 90%; }
+
+/* ---- éditeurs ---- */
 
 .editor {
   display: flex;
   flex-direction: column;
-  min-height: 0;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -143,9 +203,10 @@ select, input[type="text"], input:not([type]) {
   padding: 12px;
   font: 13px/1.55 ui-monospace, Consolas, "Courier New", monospace;
   min-height: 0;
+  width: 100%;
 }
 
-.preview { display: flex; flex-direction: column; min-height: 0; }
+.preview { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 
 .preview-bar {
   display: flex;

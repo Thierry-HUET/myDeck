@@ -1,7 +1,7 @@
 /* ============================================================
    store.js — persistance locale (localStorage)
    Decks : [{ id, name, md, css, updatedAt }]
-   Settings : { theme: { bg, color, accent, heading, body }, lastDeck }
+   Settings : { theme, lastDeck, layout: { mode, main, sub } }
    ============================================================ */
 
 const KEY_DECKS = 'mydeck.decks';
@@ -17,6 +17,7 @@ function defaultSettings() {
       body: '"Segoe UI", Calibri, sans-serif',
     },
     lastDeck: null,
+    layout: { mode: 'horizontal', main: 50, sub: 50 },
   };
 }
 

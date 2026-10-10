@@ -39,14 +39,26 @@ settings = { theme: { bg, color, accent, heading, body }, lastDeck }
 
 ## 3. Page Création
 
-- **Colonne gauche** : deux éditeurs `<textarea>` empilés — Markdown (haut) et CSS (bas), redimensionnés en ½ hauteur chacun.
-- **Colonne droite (WYSIWYG)** : rendu live de la slide courante (16:9), barre d'outils :
-  - sélecteur de deck, navigation ←/→ avec compteur `n / total` ;
-  - bouton `+ slide` : insère `\n\n---\n\n` à la position du curseur dans le Markdown ;
-  - enregistrement (`💾`) : persiste le deck dans localStorage ;
-  - création de deck (`+ Nouveau`).
+### 3.1 Layouts
+
+Deux modes, commutables par le bouton de la barre d'outils et persistés dans `settings.layout.mode` :
+
+- **horizontal** (défaut) : éditeurs Markdown/CSS empilés à gauche, WYSIWYG à droite ;
+- **vertical** : WYSIWYG en haut, bloc création en bas — Markdown à gauche, CSS à droite.
+
+### 3.2 Redimensionnement
+
+- **Splitter principal** (`data-split="main"`) : proportion éditeurs ↔ affichage (variable CSS `--main`, 15–85 %).
+- **Splitter interne** (`data-split="sub"`) : proportion Markdown ↔ CSS (variable `--sub`, 15–85 %).
+- Glisser-déposer par Pointer Events avec capture du pointeur ; le curseur s'adapte (`col-resize` / `row-resize` selon le mode).
+- Positions persistées dans `settings.layout` (main, sub) via `saveSettings`.
+
+### 3.3 Fonctions
+
+- Barre d'outils WYSIWYG : sélecteur de deck, navigation ←/→ avec compteur `n / total`, bascule de layout, enregistrement (`💾`), création de deck (`+ Nouveau`).
+- Bouton `+ slide` : insère `\n\n---\n\n` à la position du curseur dans le Markdown.
 - Le CSS du deck est injecté en direct dans l'aperçu (`<style data-deck-css>`).
-- `Alt` non requis : la navigation clavier de l'aperçu est inactive quand le focus est dans un éditeur.
+- La navigation clavier de l'aperçu est inactive quand le focus est dans un éditeur.
 
 ## 4. Page Visualisation
 

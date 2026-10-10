@@ -2,6 +2,14 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.3.0] — 2026-10-10
+
+### Ajouté
+
+- **Mode vertical** dans la page Création : WYSIWYG en haut, bloc création en bas (Markdown à gauche, CSS à droite) — bascule par bouton dans la barre d'outils.
+- **Containers redimensionnables** : splitter principal (éditeurs ↔ affichage) et splitter interne (Markdown ↔ CSS), glisser-déposer Pointer Events, bornes 15–85 %.
+- **Persistance du layout** : mode et proportions sauvegardés dans `settings.layout` ({ mode, main, sub }).
+
 ## [0.2.0] — 2026-10-10
 
 ### Ajouté
