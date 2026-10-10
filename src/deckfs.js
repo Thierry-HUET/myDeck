@@ -1,65 +1,42 @@
 /* ============================================================
-   deckfs.js — decks sur disque (File System Access API)
-   Un deck est un RÉPERTOIRE (pas un fichier) :
-     deck.md     — contenu Markdown
-     style.css   — style du deck
-     images/     — images et SVG référencés par le Markdown
-     versions/   — historique des versions du deck.md
+   deckfs.js — decks sur disque : un deck = UN FICHIER .mdk
+   ------------------------------------------------------------
+   • Cache navigateur : le deck en cours vit dans le store
+     (localStorage, cf. store.js) — copie de travail permanente.
+   • Disque : « Enregistrer » / « Enregistrer sous » écrivent un
+     fichier <nom-du-deck>.mdk — une archive ZIP contenant toute
+     l'arborescence du projet :
+         mydeck.json     manifeste (version du format deck)
+         deck.md         contenu Markdown
+         style.css       style du deck
+         images/         images et SVG référencés
+         versions/       versions antérieures de deck.md
+   • « Ouvrir » lit un .mdk et restaure le deck dans le cache.
    ============================================================ */
 
 const IMG_EXT = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
 const MAX_VERSIONS = 10;
 
-/* Version du format deck (compatibilité ascendante) — incrémenter lors d'un
-   changement de structure du répertoire (nouveaux fichiers, sémantique modifiée). */
-export const DECK_FORMAT = '1.0';
+/* Version du format deck (compatibilité) — incrémenter lors d'un
+   changement de structure de l'archive .mdk. */
+export const DECK_FORMAT = '1.1';
 
-let dir = null;                 // FileSystemDirectoryHandle lié
+/* ---------- images en mémoire (issues du .mdk ouvert) ---------- */
+
 const imgFiles = new Map();     // nom de fichier -> File
 const imgUrls = new Map();      // nom de fichier -> objectURL
 
-export const fsSupported = () => typeof window !== 'undefined' && 'showDirectoryPicker' in window;
-export const linkedDirName = () => (dir ? dir.name : null);
-
-/* ---------- utilitaires répertoire ---------- */
-
-async function readText(name) {
-  try {
-    const fh = await dir.getFileHandle(name);
-    return await (await fh.getFile()).text();
-  } catch { return ''; }
-}
-
-async function writeText(name, content) {
-  const fh = await dir.getFileHandle(name, { create: true });
-  const w = await fh.createWritable();
-  await w.write(content);
-  await w.close();
-}
-
-async function getSub(name, create = false) {
-  try { return await dir.getDirectoryHandle(name, { create }); }
-  catch { return null; }
-}
-
-/* ---------- images du deck ---------- */
-
-async function loadImages() {
+function setImages(files) { // files : Map name -> Blob
   for (const url of imgUrls.values()) URL.revokeObjectURL(url);
   imgFiles.clear();
   imgUrls.clear();
-  const imgDir = await getSub('images');
-  if (!imgDir) return;
-  for await (const [name, handle] of imgDir.entries()) {
-    if (handle.kind === 'file' && IMG_EXT.test(name)) {
-      const file = await handle.getFile();
-      imgFiles.set(name, file);
-      imgUrls.set(name, URL.createObjectURL(file));
-    }
+  for (const [name, blob] of files) {
+    imgFiles.set(name, new File([blob], name, { type: blob.type }));
+    imgUrls.set(name, URL.createObjectURL(blob));
   }
 }
 
-/** Réécrit les src="images/…" d'un conteneur rendu vers les objets URL du répertoire lié. */
+/** Réécrit les src="images/…" d'un conteneur rendu vers les objets URL du deck courant. */
 export function applyDeckImages(container) {
   container.querySelectorAll('img[src]').forEach((img) => {
     const m = img.getAttribute('src').match(/^(?:\.\/)?images\/(.+)$/);
@@ -67,42 +44,14 @@ export function applyDeckImages(container) {
   });
 }
 
-/* ---------- manifeste du deck (mydeck.json) ---------- */
+/* ---------- état de session ---------- */
 
-async function readMeta() {
-  try {
-    const fh = await dir.getFileHandle('mydeck.json');
-    return JSON.parse(await (await fh.getFile()).text());
-  } catch { return null; }
-}
+let versions = [];              // [{ name, md }] — versions antérieures de deck.md
+let lastSavedMd = null;         // dernier deck.md écrit sur disque (pour l'archivage)
+let saveHandle = null;          // FileSystemFileHandle du dernier « Enregistrer sous »
 
-async function writeMeta(deck) {
-  const meta = {
-    format: DECK_FORMAT,
-    name: deck?.name || dir.name,
-    savedAt: new Date().toISOString(),
-  };
-  await writeText('mydeck.json', JSON.stringify(meta, null, 2) + '\n');
-}
-
-/** Compare une version de format deck "1.2" à la version supportée. */
-export function isFormatSupported(v) {
-  if (!v) return true; // deck sans manifeste (première génération)
-  const cur = DECK_FORMAT.split('.').map(Number);
-  const got = String(v).split('.').map(Number);
-  return (got[0] || 0) < cur[0] || ((got[0] || 0) === cur[0] && (got[1] || 0) <= cur[1]);
-}
-
-/* ---------- ouverture ---------- */
-
-export async function openDeck() {
-  dir = await window.showDirectoryPicker({ id: 'mydeck-open', mode: 'readwrite' });
-  const meta = await readMeta();
-  const md = await readText('deck.md');
-  const css = await readText('style.css');
-  await loadImages();
-  return { name: dir.name, md, css, format: meta?.format || null };
-}
+export const hasSaveHandle = () => !!saveHandle;
+export const saveHandleName = () => (saveHandle ? saveHandle.name : null);
 
 /* ---------- gestion des versions du deck.md ---------- */
 
@@ -111,51 +60,26 @@ function stamp(d = new Date()) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}`;
 }
 
-/** Archive le deck.md courant dans versions/ si le contenu va changer. */
-async function archivePreviousMd(nextMd) {
-  const previous = await readText('deck.md');
-  if (!previous || previous === nextMd) return false;
-  const vDir = await getSub('versions', true);
-  if (!vDir) return false;
-  const fh = await vDir.getFileHandle(`deck-${stamp()}.md`, { create: true });
-  const w = await fh.createWritable();
-  await w.write(previous);
-  await w.close();
-  /* Purge : ne conserve que les MAX_VERSIONS plus récentes (tri lexical = tri chrono) */
-  const names = [];
-  for await (const [name, h] of vDir.entries()) {
-    if (h.kind === 'file' && /^deck-.+\.md$/.test(name)) names.push(name);
+/** À l'écriture d'un .mdk : archive l'ancien deck.md dans versions/ si le contenu a changé. */
+function archivePreviousMd(nextMd) {
+  if (lastSavedMd !== null && lastSavedMd !== nextMd) {
+    versions = [...versions.filter((v) => v.md !== lastSavedMd), { name: `deck-${stamp()}.md`, md: lastSavedMd }];
+    versions.sort((a, b) => a.name.localeCompare(b.name));
+    versions = versions.slice(-MAX_VERSIONS);
   }
-  names.sort();
-  for (const n of names.slice(0, Math.max(0, names.length - MAX_VERSIONS))) {
-    await vDir.removeEntry(n).catch(() => {});
-  }
-  return true;
 }
 
-/* ---------- enregistrement ---------- */
-
-/** Enregistre le deck dans le répertoire lié (versionne deck.md au passage). */
-export async function saveDeck(deck) {
-  if (!dir) throw new Error('Aucun répertoire lié.');
-  const archived = await archivePreviousMd(deck.md || '');
-  await writeText('deck.md', deck.md || '');
-  await writeText('style.css', deck.css || '');
-  await writeMeta(deck);
-  return { archived };
+/** Compare une version de format deck "1.2" à la version supportée. */
+export function isFormatSupported(v) {
+  if (!v) return true; // archive sans manifeste (première génération)
+  const cur = DECK_FORMAT.split('.').map(Number);
+  const got = String(v).split('.').map(Number);
+  return (got[0] || 0) < cur[0] || ((got[0] || 0) === cur[0] && (got[1] || 0) <= cur[1]);
 }
 
-/** Enregistre le deck dans un nouveau répertoire choisi par l'utilisateur, puis le lie. */
-export async function saveDeckAs(deck) {
-  dir = await window.showDirectoryPicker({ id: 'mydeck-saveas', mode: 'readwrite' });
-  await getSub('images', true);
-  await getSub('versions', true);
-  await loadImages();
-  const res = await saveDeck(deck);
-  return { ...res, format: DECK_FORMAT };
-}
-
-/* ---------- export ZIP (méthode « store », sans dépendance) ---------- */
+/* ============================================================
+   ZIP — écriture (méthode « store », sans dépendance)
+   ============================================================ */
 
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
@@ -187,7 +111,8 @@ function zipStore(files) { // files : [{ name, data: Uint8Array }]
     const dv = new DataView(local.buffer);
     dv.setUint32(0, 0x04034b50, true);
     dv.setUint16(4, 20, true);
-    dv.setUint16(8, 0, true);          // méthode 0 : store (sans compression)
+    dv.setUint16(6, 0, true);
+    dv.setUint16(8, 0, true);          // méthode 0 : store
     dv.setUint16(10, time, true);
     dv.setUint16(12, date, true);
     dv.setUint32(14, crc, true);
@@ -207,7 +132,7 @@ function zipStore(files) { // files : [{ name, data: Uint8Array }]
     dv.setUint32(0, 0x02014b50, true);
     dv.setUint16(4, 20, true);
     dv.setUint16(6, 20, true);
-    dv.setUint16(10, 0, true);         // méthode 0 : store
+    dv.setUint16(10, 0, true);
     dv.setUint16(12, time, true);
     dv.setUint16(14, date, true);
     dv.setUint32(16, c.crc, true);
@@ -229,21 +154,190 @@ function zipStore(files) { // files : [{ name, data: Uint8Array }]
   return new Blob([...chunks, ...centralChunks, end], { type: 'application/zip' });
 }
 
-/** Exporte le deck courant en ZIP : deck.md, style.css, images/* */
-export async function exportZip(deck) {
+/* ============================================================
+   ZIP — lecture (store + deflate via DecompressionStream)
+   ============================================================ */
+
+async function inflateRaw(u8) {
+  const ds = new DecompressionStream('deflate-raw');
+  const stream = new Blob([u8]).stream().pipeThrough(ds);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function unzip(buf) { // buf : ArrayBuffer → Map nom -> Uint8Array
+  const u8 = new Uint8Array(buf);
+  const dv = new DataView(buf);
+  /* EOCD : signature 0x06054b50 dans les derniers 65 579 octets */
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('Fichier .mdk invalide (fin d\'archive introuvable).');
+  const count = dv.getUint16(eocd + 10, true);
+  let off = dv.getUint32(eocd + 16, true);
+  const out = new Map();
+  for (let i = 0; i < count; i++) {
+    if (dv.getUint32(off, true) !== 0x02014b50) throw new Error('Archive .mdk corrompue.');
+    const method = dv.getUint16(off + 10, true);
+    const compSize = dv.getUint32(off + 20, true);
+    const nameLen = dv.getUint16(off + 28, true);
+    const extraLenC = dv.getUint16(off + 30, true);
+    const commLenC = dv.getUint16(off + 32, true);
+    const localOff = dv.getUint32(off + 42, true);
+    const name = new TextDecoder().decode(u8.slice(off + 46, off + 46 + nameLen));
+    /* en-tête local : données après fixed 30 + nom + extra */
+    const lNameLen = dv.getUint16(localOff + 26, true);
+    const lExtraLen = dv.getUint16(localOff + 28, true);
+    const dataStart = localOff + 30 + lNameLen + lExtraLen;
+    let data = u8.slice(dataStart, dataStart + compSize);
+    if (method === 8) data = await inflateRaw(data);
+    else if (method !== 0) throw new Error(`Méthode de compression non supportée (${method}) pour ${name}.`);
+    if (!name.endsWith('/')) out.set(name, data);
+    off += 46 + nameLen + extraLenC + commLenC;
+  }
+  return out;
+}
+
+/* ============================================================
+   Enregistrement .mdk
+   ============================================================ */
+
+const safeName = (n) => (n || 'deck').replace(/[\\/:*?"<>|]/g, '_').replace(/\.mdk$/i, '');
+
+/** Construit l'archive .mdk complète du deck (arborescence + versions). */
+async function buildMdkBlob(deck) {
   const enc = new TextEncoder();
+  archivePreviousMd(deck.md || '');
   const files = [
-    { name: 'mydeck.json', data: enc.encode(JSON.stringify({ format: DECK_FORMAT, name: deck.name || 'deck', exportedAt: new Date().toISOString() }, null, 2) + '\n') },
+    { name: 'mydeck.json', data: enc.encode(JSON.stringify({ format: DECK_FORMAT, name: deck.name || safeName(deck.name), savedAt: new Date().toISOString() }, null, 2) + '\n') },
     { name: 'deck.md', data: enc.encode(deck.md || '') },
     { name: 'style.css', data: enc.encode(deck.css || '') },
   ];
   for (const [name, file] of imgFiles) {
     files.push({ name: `images/${name}`, data: new Uint8Array(await file.arrayBuffer()) });
   }
-  const blob = zipStore(files);
+  for (const v of versions) {
+    files.push({ name: `versions/${v.name}`, data: enc.encode(v.md) });
+  }
+  lastSavedMd = deck.md || '';
+  return zipStore(files);
+}
+
+/** Enregistrer sous : choisit l'emplacement (showSaveFilePicker si dispo, sinon téléchargement). */
+export async function saveDeckAs(deck) {
+  const blob = await buildMdkBlob(deck);
+  const filename = `${safeName(deck.name)}.mdk`;
+  if ('showSaveFilePicker' in window) {
+    try {
+      saveHandle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'Deck myDeck (.mdk)', accept: { 'application/zip': ['.mdk'] } }],
+      });
+      const w = await saveHandle.createWritable();
+      await w.write(blob);
+      await w.close();
+      return { filename, where: 'picker' };
+    } catch (e) {
+      if (e.name === 'AbortError') return { cancelled: true };
+      throw e;
+    }
+  }
+  downloadBlob(blob, filename);
+  return { filename, where: 'download' };
+}
+
+/** Enregistrer : réutilise l'emplacement du dernier « Enregistrer sous » de la session. */
+export async function saveDeck(deck) {
+  if (saveHandle) {
+    const blob = await buildMdkBlob(deck);
+    try {
+      const w = await saveHandle.createWritable();
+      await w.write(blob);
+      await w.close();
+      return { filename: saveHandle.name, where: 'handle' };
+    } catch (e) {
+      if (e.name === 'NotAllowedError') saveHandle = null; // fichier déplacé/supprimé
+      else throw e;
+    }
+  }
+  return saveDeckAs(deck);
+}
+
+function downloadBlob(blob, filename) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${(deck.name || 'deck').replace(/[\\/:*?"<>|]/g, '_')}.zip`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+/* ============================================================
+   Ouverture .mdk
+   ============================================================ */
+
+async function pickMdkFile() {
+  if ('showOpenFilePicker' in window) {
+    try {
+      const [fh] = await window.showOpenFilePicker({
+        types: [{ description: 'Deck myDeck (.mdk)', accept: { 'application/zip': ['.mdk'] } }],
+        multiple: false,
+      });
+      return await fh.getFile();
+    } catch (e) {
+      if (e.name === 'AbortError') return null;
+      throw e;
+    }
+  }
+  /* Repli : sélecteur de fichier classique */
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.mdk,application/zip';
+    input.onchange = () => resolve(input.files[0] || null);
+    input.click();
+  });
+}
+
+/** Ouvre un fichier .mdk, restaure le deck dans le cache et retourne ses données. */
+export async function openDeck() {
+  const file = await pickMdkFile();
+  if (!file) return null;
+  const entries = await unzip(await file.arrayBuffer());
+  const dec = (n) => (entries.has(n) ? new TextDecoder().decode(entries.get(n)) : '');
+  let meta = null;
+  try { meta = JSON.parse(dec('mydeck.json')); } catch { meta = null; }
+  const format = meta?.format ?? null;
+  const md = dec('deck.md');
+  const css = dec('style.css');
+  /* Images */
+  const images = new Map();
+  for (const [name, data] of entries) {
+    const m = name.match(/^images\/(.+)$/);
+    if (m && IMG_EXT.test(m[1])) {
+      const ext = m[1].split('.').pop().toLowerCase();
+      images.set(m[1], new Blob([data], { type: `image/${ext === 'svg' ? 'svg+xml' : ext === 'jpg' ? 'jpeg' : ext}` }));
+    }
+  }
+  setImages(images);
+  /* Versions archivées */
+  versions = [];
+  for (const [name, data] of entries) {
+    const m = name.match(/^versions\/(deck-.+\.md)$/);
+    if (m) versions.push({ name: m[1], md: new TextDecoder().decode(data) });
+  }
+  versions.sort((a, b) => a.name.localeCompare(b.name));
+  versions = versions.slice(-MAX_VERSIONS);
+  lastSavedMd = md;
+  const deckName = file.name.replace(/\.mdk$/i, '') || meta?.name || 'Deck';
+  return { name: deckName, md, css, format };
+}
+
+/* ============================================================
+   Export ZIP (archive lisible, distincte du .mdk)
+   ============================================================ */
+
+export async function exportZip(deck) {
+  const blob = await buildMdkBlob(deck);
+  downloadBlob(blob, `${safeName(deck.name)}.zip`);
+  return { filename: `${safeName(deck.name)}.zip` };
 }

@@ -2,6 +2,20 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.6.0] — 2026-10-10
+
+### Modifié
+
+- **Nouveau modèle d'enregistrement** : le deck en cours est en **cache dans le navigateur** (localStorage, copie de travail) ; sur le disque, un deck est désormais **un fichier unique `<nom du deck>.mdk`** — une archive ZIP standard contenant toute l'arborescence du projet (`mydeck.json`, `deck.md`, `style.css`, `images/`, `versions/`). L'extension `.mdk` est propre à myDeck et non associée à un type existant.
+- **Menu Deck** : « Ouvrir » lit un `.mdk` ; « Enregistrer » réutilise l'emplacement du dernier « Enregistrer sous » de la session ; « Enregistrer sous » choisit l'emplacement (`showSaveFilePicker`, repli téléchargement) ; « Exporter (.zip) » produit une archive ZIP lisible partout.
+- **Versions du Markdown** : à chaque écriture sur disque, si le Markdown a changé, l'ancien `deck.md` est archivé dans `versions/` à l'intérieur du `.mdk` (10 dernières conservées).
+- Choix d'emplacement : File System Access API avec repli automatique (téléchargement / sélecteur classique) sur les navigateurs non compatibles.
+
+### Ajouté
+
+- **Lecteur ZIP natif** : lecture des méthodes store (0) et deflate (8) via `DecompressionStream`, sans dépendance — round-trip testé (écriture/relecture, archive externe compressée, validation Python).
+- **Format deck 1.1** (manifeste `mydeck.json` embarqué dans le `.mdk`).
+
 ## [0.5.1] — 2026-10-10
 
 ### Ajouté

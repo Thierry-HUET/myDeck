@@ -1,8 +1,9 @@
 /* ============================================================
    page-deck.js — menu Deck
-   Nouveau · Ouvrir · Enregistrer · Enregistrer sous · Exporter
-   ──────────── · Paramètres
-   Un deck = un répertoire (deck.md, style.css, images/, versions/).
+   Nouveau · Ouvrir (.mdk) · Enregistrer · Enregistrer sous ·
+   Exporter (.zip) ──────────── · Paramètres
+   Cache de travail : navigateur (localStorage).
+   Fichier disque : <nom du deck>.mdk (archive ZIP du projet).
    ============================================================ */
 import { getDecks, getDeck, getSettings, saveDeck as storeDeck, newDeck } from '../store.js';
 import * as deckfs from '../deckfs.js';
@@ -12,7 +13,7 @@ const ICONS = {
   nouveau: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   ouvrir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
   enregistrer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>',
-  saveas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/><path d="M2 2"/><path d="m10 15 4 4"/><path d="m14 15-4 4"/></svg>',
+  saveas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/><path d="m10 15 4 4"/><path d="m14 15-4 4"/></svg>',
   exporter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>',
   parametres: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M2 14h4M10 8h4M18 16h4"/></svg>',
 };
@@ -26,41 +27,43 @@ export function mount(app) {
       <section class="card">
         <div class="deck-menu">
           <button id="d-new">${ICONS.nouveau}Nouveau deck</button>
-          <button id="d-open">${ICONS.ouvrir}Ouvrir…</button>
+          <button id="d-open">${ICONS.ouvrir}Ouvrir (.mdk)…</button>
           <button id="d-save">${ICONS.enregistrer}Enregistrer</button>
           <button id="d-saveas">${ICONS.saveas}Enregistrer sous…</button>
-          <button id="d-export">${ICONS.exporter}Exporter (ZIP)</button>
+          <button id="d-export">${ICONS.exporter}Exporter (.zip)</button>
           <hr class="menu-sep">
           <button id="d-settings">${ICONS.parametres}Paramètres</button>
         </div>
       </section>
 
       <section class="card">
-        <h3>Structure d'un deck</h3>
-        <p>Un deck est un <strong>répertoire</strong>, pas un fichier :</p>
-        <pre class="deck-structure">MonDeck/
-├── mydeck.json    manifeste : version du format deck
+        <h3>Comment ça marche</h3>
+        <p>La copie de travail du deck est <strong>en cache dans le navigateur</strong> : vous pouvez modifier et prévisualiser sans rien écrire sur le disque.</p>
+        <p>Sur le disque, un deck est <strong>un fichier unique <code>&lt;nom&gt;.mdk</code></strong> — une archive ZIP contenant toute l'arborescence du projet :</p>
+        <pre class="deck-structure">MonDeck.mdk
+├── mydeck.json    manifeste : version du format deck (${deckfs.DECK_FORMAT})
 ├── deck.md        Markdown du deck
-├── style.css       style du deck
-├── images/         images et SVG référencés (ex. ![](images/logo.svg))
-└── versions/       versions antérieures de deck.md</pre>
-        <p class="muted">À chaque <em>Enregistrer</em>, l'ancien <code>deck.md</code> est archivé dans <code>versions/</code> (les 10 dernières versions sont conservées).</p>
-        <p class="muted">Le manifeste <code>mydeck.json</code> porte la <strong>version du format</strong> du deck (actuellement <code>${deckfs.DECK_FORMAT}</code>) pour assurer la compatibilité : un deck créé par une version plus récente de myDeck est signalé à l'ouverture.</p>
-        <p class="muted">L'accès aux répertoires utilise la File System Access API (Chrome, Edge, Opera). Sur Firefox/Safari, utilisez <em>Exporter</em> ou l'import/export JSON des Paramètres.</p>
+├── style.css      style du deck
+├── images/        images et SVG référencés
+└── versions/      versions antérieures de deck.md (10 max)</pre>
+        <p class="muted">À chaque enregistrement sur disque, si le Markdown a changé, l'ancien <code>deck.md</code> est archivé dans <code>versions/</code> à l'intérieur du .mdk.</p>
+        <p class="muted">« Enregistrer » réutilise l'emplacement du dernier « Enregistrer sous » de la session ; sinon il se comporte comme « Enregistrer sous ».</p>
       </section>
     </div>`;
 
   const status = app.querySelector('#d-status');
+  const currentDeck = () => getDeck(getSettings().lastDeck) || getDecks()[0] || null;
   const updateStatus = () => {
-    const linked = deckfs.linkedDirName();
-    status.textContent = linked
-      ? ` Répertoire lié : ${linked}`
-      : ' Aucun répertoire lié — « Enregistrer sous » pour choisir un répertoire.';
-    status.classList.toggle('linked', !!linked);
+    const deck = currentDeck();
+    const parts = [];
+    parts.push(deck ? `Deck en cache : « ${deck.name} »` : 'Aucun deck en cache');
+    parts.push(deckfs.saveHandleName()
+      ? `fichier : ${deckfs.saveHandleName()}`
+      : 'aucun fichier .mdk lié cette session');
+    status.textContent = parts.join(' — ');
+    status.classList.toggle('linked', !!deckfs.saveHandleName());
   };
   updateStatus();
-
-  const currentDeck = () => getDeck(getSettings().lastDeck) || getDecks()[0] || null;
 
   /* ---- Nouveau deck ---- */
   app.querySelector('#d-new').addEventListener('click', () => {
@@ -70,25 +73,22 @@ export function mount(app) {
     location.hash = '#/create';
   });
 
-  /* ---- Ouvrir un répertoire deck ---- */
+  /* ---- Ouvrir un .mdk ---- */
   app.querySelector('#d-open').addEventListener('click', async () => {
-    if (!deckfs.fsSupported()) {
-      alert("Votre navigateur ne supporte pas l'accès aux répertoires (File System Access API). Utilisez Chrome ou Edge, ou passez par l'import JSON des Paramètres.");
-      return;
-    }
     try {
       const d = await deckfs.openDeck();
+      if (!d) return;
       if (d.format && !deckfs.isFormatSupported(d.format)) {
         const go = confirm(
-          `Ce deck a été créé avec un format plus récent (${d.format} > ${deckfs.DECK_FORMAT}).\n` +
+          `Ce deck utilise un format plus récent (${d.format} > ${deckfs.DECK_FORMAT}).\n` +
           `myDeck ne garantit pas la compatibilité : l'enregistrer pourrait le rendre inutilisable par cette version.\n\nL'ouvrir quand même ?`
         );
         if (!go) return;
       } else if (!d.format && (d.md || d.css)) {
-        alert('Deck sans manifeste mydeck.json (ancien format) — il sera mis au format ' + deckfs.DECK_FORMAT + ' au prochain enregistrement.');
+        alert(`Deck sans manifeste (ancien format) — il sera mis au format ${deckfs.DECK_FORMAT} au prochain enregistrement.`);
       }
       if (!d.md && !d.css) {
-        const ok = confirm('Ce répertoire ne contient pas de deck.md — l\'initialiser comme nouveau deck ?');
+        const ok = confirm('Ce .mdk ne contient pas de deck.md — l\'initialiser comme nouveau deck ?');
         if (!ok) return;
       }
       const existing = getDecks().find((x) => x.name === d.name);
@@ -99,51 +99,49 @@ export function mount(app) {
       updateStatus();
       location.hash = '#/create';
     } catch (e) {
-      if (e.name !== 'AbortError') alert('Ouverture impossible : ' + e.message);
+      alert('Ouverture impossible : ' + e.message);
     }
   });
 
-  /* ---- Enregistrer dans le répertoire lié ---- */
+  /* ---- Enregistrer (fichier .mdk) ---- */
   app.querySelector('#d-save').addEventListener('click', async () => {
     const deck = currentDeck();
     if (!deck) return alert('Aucun deck courant.');
-    if (!deckfs.linkedDirName()) {
-      return alert("Aucun répertoire lié — utilisez « Enregistrer sous » pour en choisir un.");
-    }
     try {
-      const { archived } = await deckfs.saveDeck(deck);
-      alert(archived
-        ? `Deck « ${deck.name} » enregistré.\nVersion précédente archivée dans versions/.`
-        : `Deck « ${deck.name} » enregistré.`);
+      const r = await deckfs.saveDeck(deck);
+      if (!r || r.cancelled) return;
       updateStatus();
+      alert(r.where === 'download'
+        ? `Deck « ${deck.name} » enregistré : ${r.filename} (téléchargement).`
+        : `Deck « ${deck.name} » enregistré dans ${r.filename}.`);
     } catch (e) {
       alert('Enregistrement impossible : ' + e.message);
     }
   });
 
-  /* ---- Enregistrer sous… (nouveau répertoire) ---- */
+  /* ---- Enregistrer sous… (choix de l'emplacement) ---- */
   app.querySelector('#d-saveas').addEventListener('click', async () => {
     const deck = currentDeck();
     if (!deck) return alert('Aucun deck courant.');
-    if (!deckfs.fsSupported()) {
-      alert("Votre navigateur ne supporte pas l'accès aux répertoires (File System Access API). Utilisez l'export JSON des Paramètres.");
-      return;
-    }
     try {
-      await deckfs.saveDeckAs(deck);
-      alert(`Deck « ${deck.name} » enregistré dans le répertoire lié.`);
+      const r = await deckfs.saveDeckAs(deck);
+      if (!r || r.cancelled) return;
       updateStatus();
+      alert(r.where === 'download'
+        ? `Deck « ${deck.name} » enregistré : ${r.filename} (téléchargement — votre navigateur ne supporte pas le choix d'emplacement).`
+        : `Deck « ${deck.name} » enregistré dans ${r.filename}.`);
     } catch (e) {
-      if (e.name !== 'AbortError') alert('Enregistrement impossible : ' + e.message);
+      alert('Enregistrement impossible : ' + e.message);
     }
   });
 
-  /* ---- Exporter en ZIP ---- */
+  /* ---- Exporter (.zip, archive lisible) ---- */
   app.querySelector('#d-export').addEventListener('click', async () => {
     const deck = currentDeck();
     if (!deck) return alert('Aucun deck courant.');
     try {
-      await deckfs.exportZip(deck);
+      const r = await deckfs.exportZip(deck);
+      alert(`Archive exportée : ${r.filename}`);
     } catch (e) {
       alert('Export impossible : ' + e.message);
     }

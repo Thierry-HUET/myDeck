@@ -9,7 +9,7 @@
 
 - [ ] **Importer des polices extérieures** (Google Fonts & co.) : chargement dynamique via `<link>` ou CSS `@import` + ajout automatique dans les menus déroulants des polices.
 - [ ] **Historique des versions** : interface de restauration (lister `versions/`, prévisualiser, revenir à une version) et vue diff entre deux versions.
-- [ ] **Ajout d'images depuis l'app** : glisser-déposer d'une image dans l'éditeur → copie dans `images/` du deck lié + insertion du Markdown correspondant.
+- [ ] **Ajout d'images depuis l'app** : glisser-déposer d'une image dans l'éditeur → stockage dans le cache du deck + insertion du Markdown `![](images/…)` ; l'image est écrite dans `images/` du `.mdk` au prochain enregistrement.
 - [ ] **Transitions** entre slides (fondu, glissement) pilotables par une variable CSS `--transition`.
 - [ ] **Fragments** : affichage progressif des listes (une pression = un élément) via un marqueur Markdown (`- <!--frag-->`).
 - [ ] **Numérotation de slide** optionnelle (coin bas-droit) activable par variable CSS.

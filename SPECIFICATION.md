@@ -25,7 +25,7 @@ myDeck est une application web de création et de présentation de slides type P
 src/main.js            — routeur : résout #/xxx → src/pages/page-xxx.js, gère le nettoyage des écouteurs
 src/store.js           — decks et settings en localStorage, application du thème (variables CSS)
 src/md2slides.js       — splitSlides (---), md2html (marked), renderSlideInto, applyDeckCss
-src/deckfs.js          — decks sur disque (File System Access API), versions du deck.md, export ZIP
+src/deckfs.js          — decks sur disque : fichier unique .mdk (ZIP), versions du deck.md, export ZIP
 src/pages/page-*       — une fonction mount(app) par page, retourne un cleanup optionnel
 src/styles/global.css  — coquille applicative (barre, éditeurs, HUD, formulaires)
 src/styles/slides.css  — style des .slide (partagé WYSIWYG et visualisation)
@@ -72,37 +72,40 @@ Deux modes, réglés depuis la **page Paramètres** et persistés dans `settings
 
 ## 5. Page Deck (`#/deck`)
 
-Un **deck** est un répertoire (pas un fichier) :
+**Modèle de persistance** :
+- **Cache de travail** : le deck en cours vit dans le navigateur (localStorage, cf. §store.js) — modification et prévisualisation sans écriture disque.
+- **Disque** : un deck est **un fichier unique `<nom>.mdk`** — une archive ZIP contenant toute l'arborescence du projet :
 
 ```
-MonDeck/
+MonDeck.mdk
 ├── mydeck.json — manifeste : version du format deck (compatibilité)
 ├── deck.md     — contenu Markdown
 ├── style.css    — style du deck
 ├── images/      — images et SVG référencés par le Markdown
-└── versions/    — versions antérieures de deck.md
+└── versions/    — versions antérieures de deck.md (10 max)
 ```
+
+L'extension **`.mdk`** est propre à myDeck ; l'archive reste un ZIP standard, lisible par tout outil.
 
 ### 5.1 Menu
 
-- **Nouveau deck** : crée un deck vierge (nom demandé) et ouvre la page Création.
-- **Ouvrir…** : lie un répertoire via `showDirectoryPicker`, charge `deck.md` + `style.css` et référence les fichiers de `images/` (les `![](images/x)` sont résolus en aperçu). Un deck homonyme existant est mis à jour au lieu d'être dupliqué.
-- **Enregistrer** : écrit `deck.md` et `style.css` dans le répertoire lié et met à jour le manifeste `mydeck.json` (`format`, `name`, `savedAt`) ; si `deck.md` diffère, l'ancien contenu est archivé dans `versions/deck-AAAAMMJJ_hhmmss.md` (10 dernières versions conservées, purge automatique).
-- **Enregistrer sous…** : choisit un nouveau répertoire (`images/` et `versions/` créés), y écrit le deck et le lie.
-- **Exporter** : télécharge le deck en **ZIP** (`deck.md`, `style.css`, `images/*`), sans compression, sans dépendance.
+- **Nouveau deck** : crée un deck vierge (nom demandé) dans le cache et ouvre la page Création.
+- **Ouvrir (.mdk)…** : lit un fichier `.mdk` (`showOpenFilePicker`, repli sélecteur classique), restaure `deck.md`, `style.css`, les images et les versions dans le cache. Un deck homonyme existant est mis à jour au lieu d'être dupliqué.
+- **Enregistrer** : écrit le deck dans le fichier `.mdk` du dernier « Enregistrer sous » de la session ; sinon se comporte comme « Enregistrer sous ».
+- **Enregistrer sous…** : choisit l'emplacement (`showSaveFilePicker`, repli téléchargement) et écrit `<nom du deck>.mdk`. Si le Markdown a changé depuis la dernière écriture, l'ancien `deck.md` est archivé dans `versions/deck-AAAAMMJJ_hhmmss.md` à l'intérieur de l'archive (10 dernières versions conservées).
+- **Exporter (.zip)** : télécharge la même arborescence sous forme d'archive ZIP standard, lisible partout.
 - ────────────
 - **Paramètres** : accède à la page Paramétrage (`#/settings`).
 
 ### 5.2 Version du format deck (compatibilité)
 
-- Chaque répertoire deck contient un manifeste **`mydeck.json`** : `{ format, name, savedAt }`.
-- `format` est la version du **format deck** (actuellement `1.0`), incrémentée à chaque changement de structure du répertoire. Elle est indépendante de la version de l'application.
+- Chaque `.mdk` contient un manifeste **`mydeck.json`** : `{ format, name, savedAt }`.
+- `format` est la version du **format deck** (actuellement `1.1`), incrémentée à chaque changement de structure de l'archive. Elle est indépendante de la version de l'application.
 - À l'**ouverture** : un deck au format plus récent que celui supporté déclenche un avertissement (perte de garantie de compatibilité) ; un deck sans manifeste (ancien format) est signalé et mis au format courant au prochain enregistrement.
-- L'**export ZIP** embarque le manifeste (`format`, `name`, `exportedAt`).
 
 ### 5.3 Support navigateur
 
-L'accès aux répertoires repose sur la **File System Access API** (Chrome, Edge, Opera). Sur les autres navigateurs, la page signale la limitation ; l'import/export JSON des Paramètres reste disponible.
+Le choix d'emplacement (`showSaveFilePicker` / `showOpenFilePicker`) repose sur la File System Access API (Chrome, Edge, Opera) ; ailleurs, repli automatique sur le téléchargement et le sélecteur de fichier classique. La lecture ZIP supporte les méthodes store (0) et deflate (8) via `DecompressionStream`.
 
 ## 6. Page Paramétrage
 
