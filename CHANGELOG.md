@@ -2,6 +2,18 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.10.0] — 2026-10-10
+
+### Modifié
+
+- **Mise en forme ciblée : remplacement du HTML inline** par une syntaxe inspirée de **MyST Markdown** — rôles inline `{accent}`mot`` et directive de bloc ```` ```{highlight} ````. Le HTML inline n'est plus nécessaire pour colorer un mot ou un paragraphe.
+
+### Ajouté
+
+- **Rôles inline intégrés** : `{accent}`, `{muted}`, `{warn}`, `{ok}`, `{err}`, `{mark}` ; couleur libre via `{color=#f59e0b}`mot`` ; rôles personnalisés via le CSS du deck (`.slide .role-<nom>`).
+- **Directive de bloc** ```` ```{highlight} ```` (paragraphe mis en avant) ; directives personnalisées via `.slide p.dir-<nom>`.
+- **Protection des blocs de code** : aucune transformation des rôles/directives à l'intérieur de blocs ``` ou ~~~.
+
 ## [0.9.1] — 2026-10-10
 
 ### Ajouté

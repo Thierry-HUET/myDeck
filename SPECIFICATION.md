@@ -83,16 +83,27 @@ Balisage complémentaire dans le `.md` — une slide peut être préfixée d'un 
 - **Templates personnalisés** : tout autre nom (`::{citation}`, `::{question}`…) est rendu sans style particulier par défaut ; on le définit dans le **CSS du deck** via `.slide.tpl-citation { … }`.
 - Sans bloc template, l'heuristique historique est conservée (slide commençant par `#` = centrée).
 
-### 4.1 Mise en forme ciblée (mot ou paragraphe coloré)
+### 4.1 Mise en forme ciblée (rôles et directives, inspiré de MyST)
 
-Le Markdown laisse passer le **HTML inline** — trois niveaux, du plus recommandé au plus libre :
+Syntaxe **MyST Markdown** — pas de HTML inline dans le Markdown du deck. Deux mécanismes :
 
-1. **Classes utilitaires intégrées** (suivent le thème, définies dans `slides.css`) :
-   - mot : `<span class="accent">mot</span>` (couleur d'accent), `.muted` (atténué), `.warn` / `.ok` / `.err` (orange / vert / rouge) ;
-   - paragraphe : `<p class="highlight">paragraphe mis en avant</p>` (fond léger + barre d'accent) ;
-   - surlignage : `<mark>mot</mark>`.
-2. **Couleur libre** : `<span style="color: tomato">mot</span>` ou `<p style="color: #f59e0b">…</p>`.
-3. **Classes personnalisées** : définies dans le CSS du deck (`.slide .ma-classe { … }`), utilisées dans le Markdown.
+1. **Rôles inline** — `{role}`contenu`` (contenu entre accents graves) :
+   - `{accent}`mot`` — couleur d'accent ;
+   - `{muted}`mot`` — atténué ; `{warn}` / `{ok}` / `{err}` — orange / vert / rouge ;
+   - `{mark}`mot`` — surlignage (`<mark>`) ;
+   - `{color=#f59e0b}`mot`` — couleur libre (nom CSS, hex, `rgb()`) ;
+   - **rôles personnalisés** : `{citation}`mot`` → `<span class="role-citation">`, style définissable dans le CSS du deck via `.slide .role-citation { … }`.
+2. **Directive de bloc** — ```` ```{nom} ```` :
+
+   ````
+   ```{highlight}
+   Paragraphe mis en avant (fond léger + barre d'accent)
+   ```
+   ````
+
+   → `<p class="dir-highlight">` ; directives personnalisées : ```` ```{citation} ```` → `<p class="dir-citation">`, style via `.slide p.dir-citation { … }`.
+
+**Règles** : le contenu des rôles et directives est rendu en Markdown inline (gras, italique… conservés) ; les blocs de code (``` ou ~~~) sont protégés — aucune transformation à l'intérieur.
 
 ### 4.2 Insertion assistée (page Création)
 

@@ -6,12 +6,46 @@
        …contenu Markdown…
        ::
    Le rendu applique les classes `tpl tpl-<nom>` à l'élément .slide.
-   Templates intégrés stylés dans slides.css : title, section.
-   Tout autre nom est personnalisable via le CSS du deck (.tpl-<nom>).
+
+   Mise en forme ciblée (inspiré de MyST, sans HTML) :
+   • Rôles inline    : {accent}`mot`, {warn}`mot`, {color=#f59e0b}`mot`
+   • Directives bloc : ```{highlight}
+                         paragraphe mis en avant
+                       ```
    ============================================================ */
 import { marked } from 'marked';
 
-export const md2html = (md) => marked.parse(md);
+/* ---------- rôles inline & directives (pré-traitement) ---------- */
+
+/* {role}`contenu` ou {role=valeur}`contenu` — hors blocs de code */
+const INLINE_ROLE = /\{([\w-]+)(?:=([#\w][^`}]*))?\}`([^`]*)`/g;
+
+/* Bloc directive ```{nom}\n…\n``` (contrairement aux blocs de code, {nom} suit ``` ) */
+const DIRECTIVE = /(^|\n)([ \t]*)```\{([\w-]+)\}[ \t]*\n([\s\S]*?)\n```\s*(?=\n|$)/g;
+
+function applyDirectives(src) {
+  return src.replace(DIRECTIVE, (m, nl, indent, name, body) => {
+    /* le corps de la directive est rendu comme Markdown inline */
+    const inner = marked.parseInline(body.trim());
+    return `${nl}${indent}<p class="dir-${name}">${inner}</p>`;
+  });
+}
+
+function applyInlineRoles(src) {
+  /* protéger les blocs de code ``` … ``` et ~~~ … ~~~ */
+  const parts = src.split(/(```[\s\S]*?```|~~~[\s\S]*?~~~)/g);
+  return parts
+    .map((part, i) => (i % 2 === 1 ? part : part.replace(INLINE_ROLE, (m, role, arg, content) => {
+      if (role === 'color') return `<span style="color:${arg}">${content}</span>`;
+      if (role === 'mark') return `<mark>${content}</mark>`;
+      return `<span class="role-${role}">${content}</span>`;
+    })))
+    .join('');
+}
+
+export const md2html = (md) => marked.parse(applyInlineRoles(applyDirectives(md)));
+
+/* ---------- templates de slides ---------- */
 
 /* Bloc template en tête de slide : ::{nom}\n contenu \n:: */
 const TPL_RE = /^\s*::\{([\w-]+)\}[ \t]*\r?\n([\s\S]*?)\r?\n?::\s*$/;

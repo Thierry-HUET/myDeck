@@ -119,19 +119,21 @@
    Les noms non stylés s'affichent comme une slide standard. */
 
 /* ============================================================
-   Mise en forme ciblée dans une slide (HTML inline Markdown)
-   Mot        : <span class="accent">mot</span>
-   Paragraphe : <p class="highlight">paragraphe</p>
-   Couleur libre : <span style="color: tomato">mot</span>
+   Mise en forme ciblée — rôles inline et directives (syntaxe MyST)
+   Mot        : {accent}`mot`   {muted}`mot`   {warn}`mot`
+                {ok}`mot`  {err}`mot`  {mark}`mot`
+   Couleur    : {color=#f59e0b}`mot`
+   Paragraphe : ```{highlight}\n paragraphe \n```
+   Rôles personnalisés : définir .slide .role-<nom> dans le CSS du deck.
    ============================================================ */
 
-.slide .accent { color: var(--accent); }
-.slide .muted  { opacity: 0.6; }
-.slide .warn   { color: #f59e0b; }
-.slide .ok     { color: #34d399; }
-.slide .err    { color: #f87171; }
+.slide .role-accent { color: var(--accent); }
+.slide .role-muted  { opacity: 0.6; }
+.slide .role-warn   { color: #f59e0b; }
+.slide .role-ok     { color: #34d399; }
+.slide .role-err    { color: #f87171; }
 
-.slide p.highlight {
+.slide p.dir-highlight {
   background: rgba(255, 255, 255, 0.08);
   border-left: 4px solid var(--accent);
   padding: 0.4em 0.8em;
