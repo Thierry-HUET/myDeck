@@ -2,6 +2,13 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.6.3] — 2026-10-10
+
+### Corrigé
+
+- **« Enregistrer » ouvrait systématiquement l'explorateur** : la page Création ne passait pas par la restauration de l'emplacement mémorisé (IndexedDB) et appelait directement « Enregistrer sous ». Désormais « Enregistrer » réutilise bien l'emplacement en cours du deck.
+- **Permission de fichier** : si le navigateur demande une revalidation, elle est demandée au moment du clic (activation utilisateur) — plus de repli injustifié sur le sélecteur d'emplacement. Le sélecteur ne s'ouvre que si aucun `.mdk` n'est lié au deck, ou en cas de refus/fichier disparu.
+
 ## [0.6.2] — 2026-10-10
 
 ### Ajouté

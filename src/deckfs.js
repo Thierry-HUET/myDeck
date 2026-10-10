@@ -313,12 +313,22 @@ export async function saveDeck(deck) {
   if (saveHandle) {
     const blob = await buildMdkBlob(deck);
     try {
+      /* Permission à revalider : la demander maintenant (le clic fournit
+         l'activation utilisateur) pour écrire à l'endroit en cours
+         sans rouvrir l'explorateur. */
+      if (typeof saveHandle.queryPermission === 'function'
+          && await saveHandle.queryPermission({ mode: 'readwrite' }) !== 'granted') {
+        const perm = await saveHandle.requestPermission
+          ? await saveHandle.requestPermission({ mode: 'readwrite' })
+          : 'granted';
+        if (perm !== 'granted') { saveHandle = null; return saveDeckAs(deck); }
+      }
       const w = await saveHandle.createWritable();
       await w.write(blob);
       await w.close();
       return { filename: saveHandle.name, where: 'handle' };
     } catch (e) {
-      if (e.name === 'NotAllowedError') { saveHandle = null; return saveDeckAs(deck); } // permission retirée : redemander
+      if (e.name === 'NotAllowedError') { saveHandle = null; return saveDeckAs(deck); } // permission refusée : redemander
       if (e.name === 'NotFoundError') { saveHandle = null; return saveDeckAs(deck); }   // fichier supprimé/déplacé
       throw e;
     }
