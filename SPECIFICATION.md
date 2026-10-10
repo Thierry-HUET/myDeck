@@ -62,7 +62,28 @@ Deux modes, réglés depuis la **page Paramètres** et persistés dans `settings
 - Le CSS du deck est injecté en direct dans l'aperçu (`<style data-deck-css>`).
 - La navigation clavier de l'aperçu est inactive quand le focus est dans un éditeur.
 
-## 4. Page Visualisation
+## 4. Templates de slides
+
+Balisage complémentaire dans le `.md` — une slide peut être préfixée d'un bloc de template :
+
+```
+::{nom-du-template}
+…contenu Markdown…
+::
+
+---
+## Slide ordinaire
+```
+
+- Le bloc s'applique à **une seule slide** (séparée par `---` comme les autres) ; le marqueur `::` referme le bloc.
+- Le rendu applique les classes **`.tpl .tpl-<nom>`** à l'élément `.slide` (WYSIWYG, visualisation, vue d'ensemble et impression).
+- **Templates intégrés** (stylés dans `src/styles/slides.css`) :
+  - `::{title}` — slide de titre : contenu centré, titre mis en avant ;
+  - `::{section}` — intercalaire de section : contenu centré, titre en couleur d'accent.
+- **Templates personnalisés** : tout autre nom (`::{citation}`, `::{question}`…) est rendu sans style particulier par défaut ; on le définit dans le **CSS du deck** via `.slide.tpl-citation { … }`.
+- Sans bloc template, l'heuristique historique est conservée (slide commençant par `#` = centrée).
+
+## 5. Page Visualisation
 
 - Charge le deck indiqué (`?id=`), sinon le dernier utilisé, sinon le premier.
 - Navigation : `←/→`, `Espace`, `PageUp/Down`, `Home/End`, clic moitié gauche/droite, swipe tactile (> 50 px).
@@ -70,7 +91,7 @@ Deux modes, réglés depuis la **page Paramètres** et persistés dans `settings
 - Barre de progression + compteur ; deep-link `#4` (slide 4).
 - `Ctrl+P` : impression une slide par page (`#print-deck` + `page-break-after`).
 
-## 5. Page Slides (`#/deck`)
+## 6. Page Slides (`#/deck`)
 
 **Modèle de persistance** :
 - **Cache de travail** : le deck en cours vit dans le navigateur (localStorage, cf. §store.js) — modification et prévisualisation sans écriture disque.
@@ -87,7 +108,7 @@ MonDeck.mdk
 
 L'extension **`.mdk`** est propre à myDeck ; l'archive reste un ZIP standard, lisible par tout outil.
 
-### 5.1 Menu
+### 6.1 Menu
 
 - **Nouveau deck** : crée un deck vierge (nom demandé) dans le cache et ouvre la page Création.
 - **Ouvrir (.mdk)…** : lit un fichier `.mdk` (`showOpenFilePicker`, repli sélecteur classique), restaure `deck.md`, `style.css`, les images et les versions dans le cache. Un deck homonyme existant est mis à jour au lieu d'être dupliqué.
@@ -97,17 +118,17 @@ L'extension **`.mdk`** est propre à myDeck ; l'archive reste un ZIP standard, l
 - ────────────
 - **Paramètres** : accède à la page Paramétrage (`#/settings`).
 
-### 5.2 Version du format deck (compatibilité)
+### 6.2 Version du format deck (compatibilité)
 
 - Chaque `.mdk` contient un manifeste **`mydeck.json`** : `{ format, name, savedAt }`.
 - `format` est la version du **format deck** (actuellement `1.1`), incrémentée à chaque changement de structure de l'archive. Elle est indépendante de la version de l'application.
 - À l'**ouverture** : un deck au format plus récent que celui supporté déclenche un avertissement (perte de garantie de compatibilité) ; un deck sans manifeste (ancien format) est signalé et mis au format courant au prochain enregistrement.
 
-### 5.3 Support navigateur
+### 6.3 Support navigateur
 
 Le choix d'emplacement (`showSaveFilePicker` / `showOpenFilePicker`) repose sur la File System Access API (Chrome, Edge, Opera) ; ailleurs, repli automatique sur le téléchargement et le sélecteur de fichier classique. La lecture ZIP supporte les méthodes store (0) et deflate (8) via `DecompressionStream`.
 
-## 6. Page Paramétrage
+## 7. Page Paramétrage
 
 - Thème : fond (couleur ou gradient), couleur de texte, accent, polices — appliqué globalement via variables CSS sur `:root`.
 - **Polices** : menus déroulants alimentés par les polices détectées dans le navigateur (`document.fonts.check` sur une liste candidate + familles génériques). L'import de polices extérieures (Google Fonts) est prévu dans la TODO.
@@ -115,7 +136,7 @@ Le choix d'emplacement (`showSaveFilePicker` / `showOpenFilePicker`) repose sur 
 - Gestion des decks : liste, suppression.
 - Export/import JSON (decks + settings).
 
-## 7. Contraintes techniques
+## 8. Contraintes techniques
 
 - **Navigateurs** : ES2020+ (Chrome/Edge/Firefox/Safari récents).
 - **Aucun backend** : tout est client ; `npm run dev` (Vite) pour le développement, `npm run build` pour la production (dossier `dist/` déployable sur tout hébergeur statique).

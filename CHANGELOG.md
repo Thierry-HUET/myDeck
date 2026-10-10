@@ -2,6 +2,15 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.9.0] — 2026-10-10
+
+### Ajouté
+
+- **Templates de slides** : balisage complémentaire dans le Markdown — un bloc `::{nom-du-template}\n…contenu…\n::` en tête de slide. Le rendu applique les classes `.tpl .tpl-<nom>` à la slide (WYSIWYG, visualisation, vue d'ensemble, impression).
+- **Templates intégrés stylés** : `::{title}` (slide de titre, centrée) et `::{section}` (intercalaire de section, titre en accent).
+- **Templates personnalisés** : tout nom supplémentaire est définissable dans le CSS du deck via `.slide.tpl-<nom> { … }`.
+- `parseSlide(md)` exporté par le moteur (extraction template + contenu).
+
 ## [0.8.0] — 2026-10-10
 
 ### Modifié

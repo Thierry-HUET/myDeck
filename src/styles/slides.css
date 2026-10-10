@@ -72,3 +72,48 @@
 .slide th { background: rgba(255, 255, 255, 0.1); color: var(--accent); }
 
 .slide .error { color: #fca5a5; font-size: 1.2rem; text-align: center; }
+
+/* ============================================================
+   Templates de slides (balisage ::{nom} … ::)
+   Classes appliquées : .tpl .tpl-<nom>
+   ============================================================ */
+
+/* ::{title} — slide de titre : centré, mise en avant */
+.slide.tpl-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.slide.tpl-title h1 {
+  font-size: 2.8em;
+  margin-bottom: 0.25em;
+}
+.slide.tpl-title em {
+  opacity: 0.75;
+  font-size: 1.2em;
+}
+
+/* ::{section} — intercalaire de section : centré, accent fort */
+.slide.tpl-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 0.4em;
+}
+.slide.tpl-section h1 {
+  font-size: 2.2em;
+  color: var(--accent);
+}
+.slide.tpl-section em {
+  opacity: 0.7;
+  font-size: 1.05em;
+  letter-spacing: 0.04em;
+}
+
+/* Templates personnalisés : styles à définir dans le CSS du deck, ex. :
+   .slide.tpl-citation { … }            (le bloc ::{citation} … ::)
+   Les noms non stylés s'affichent comme une slide standard. */
