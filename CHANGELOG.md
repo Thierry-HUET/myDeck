@@ -2,6 +2,12 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.4.1] — 2026-10-10
+
+### Ajouté
+
+- **Logo dans la barre supérieure** : `Logo_seul.webp` placé à gauche du nom « myDeck », sur la même ligne, hauteur alignée sur le texte (`1em`) — fichier attendu dans `public/`.
+
 ## [0.4.0] — 2026-10-10
 
 ### Ajouté
