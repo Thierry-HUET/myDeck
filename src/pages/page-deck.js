@@ -166,7 +166,7 @@ export function mount(app) {
       ? `Dossier « ${lib} » — decks : ${files.join(', ')}`
       : `Dossier « ${lib} » — aucun fichier .mdk pour le moment.`;
   };
-  await refreshLibList();
+  refreshLibList();   /* pas d'await : mount n'est pas async */
   app.querySelector('#d-lib-change').addEventListener('click', async () => {
     try {
       const name = await deckfs.changeLibrary();

@@ -2,6 +2,12 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.7.2] — 2026-10-10
+
+### Corrigé
+
+- **Régression v0.7.1** : page Deck blanche — un `await` dans `mount` (fonction non asynchrone) provoquait une SyntaxError ESM au chargement du module. L'initialisation de la liste du dossier des decks est désormais lancée sans bloquer le montage.
+
 ## [0.7.1] — 2026-10-10
 
 ### Ajouté
