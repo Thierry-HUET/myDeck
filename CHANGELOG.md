@@ -2,18 +2,6 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
-## [0.6.4] — 2026-10-10
-
-### Corrigé
-
-- **Handle .mdk lié à l'ID du deck** (et non plus global) : chaque deck retrouve son propre fichier ; plus de risque d'écrire le deck B dans le fichier du deck A, ni d'ignorer le fichier du deck courant.
-- `restoreSaveHandle` : restauration fiabilisée (reset propre avant lecture IndexedDB).
-
-### Ajouté
-
-- **Visibilité du fichier lié** : le bouton Enregistrer de la page Création affiche en info-bulle le fichier `.mdk` lié ; la page Deck affiche « fichier lié : … » dans son statut.
-- **Diagnostic explicite** : si le sélecteur s'ouvre, la raison est affichée (« aucun-fichier-lié » = première sauvegarde, « permission-refusée », « fichier-introuvable »).
-
 ## [0.6.3] — 2026-10-10
 
 ### Corrigé
