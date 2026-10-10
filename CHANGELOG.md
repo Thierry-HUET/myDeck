@@ -2,6 +2,18 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.4.0] — 2026-10-10
+
+### Ajouté
+
+- **Sélecteur de disposition** dans la page Paramètres : mode horizontal ou vertical de la page Création (le bouton de bascule est retiré de la barre d'outils).
+- **Menus déroulants de polices** (titres et corps) alimentés par les polices **détectées dans le navigateur** (`document.fonts.check` sur une liste candidate + familles génériques).
+- TODO : import de polices extérieures (Google Fonts).
+
+### Modifié
+
+- La disposition de la page Création se règle désormais exclusivement depuis les Paramètres (`settings.layout.mode`).
+
 ## [0.3.0] — 2026-10-10
 
 ### Ajouté

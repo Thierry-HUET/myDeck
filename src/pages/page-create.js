@@ -1,6 +1,6 @@
 /* ============================================================
    page-create.js — Création
-   Deux modes de layout (persistés dans settings.layout) :
+   Layout défini dans les Paramètres (settings.layout.mode) :
    • horizontal : [ éditeurs MD/CSS empilés | WYSIWYG ]  (défaut)
    • vertical   : [ WYSIWYG / éditeurs MD|CSS côte à côte ]
    Tous les containers sont redimensionnables par splitters.
@@ -37,7 +37,6 @@ export function mount(app) {
           <span id="p-counter">– / –</span>
           <button id="btn-next">→</button>
           <span class="spacer"></span>
-          <button id="btn-layout" title="Basculer horizontal / vertical"></button>
           <button id="btn-new">+ Nouveau</button>
           <button id="btn-save" class="primary">💾 Enregistrer</button>
         </div>
@@ -55,13 +54,12 @@ export function mount(app) {
   const stage = app.querySelector('#p-stage');
   const counter = app.querySelector('#p-counter');
   const deckSel = app.querySelector('#deck-sel');
-  const btnLayout = app.querySelector('#btn-layout');
 
   let slides = [];
   let idx = 0;
   let dirty = false;
 
-  /* ================= Layout ================= */
+  /* ================= Layout (mode issu des Paramètres) ================= */
 
   const clamp = (v) => Math.max(15, Math.min(85, v));
 
@@ -70,19 +68,9 @@ export function mount(app) {
     page.classList.toggle('mode-vertical', layout.mode === 'vertical');
     page.style.setProperty('--main', layout.main + '%');
     editors.style.setProperty('--sub', layout.sub + '%');
-    btnLayout.textContent = layout.mode === 'horizontal' ? '⇄ Horizontal' : '⇅ Vertical';
-    btnLayout.title = layout.mode === 'horizontal'
-      ? 'Passer en vertical : affichage en haut, création en bas'
-      : 'Passer en horizontal : création à gauche, affichage à droite';
   }
 
   const persistLayout = () => saveSettings({ ...getSettings(), layout: { ...layout } });
-
-  btnLayout.addEventListener('click', () => {
-    layout.mode = layout.mode === 'horizontal' ? 'vertical' : 'horizontal';
-    applyLayout();
-    persistLayout();
-  });
 
   /* ---- splitters (pointer events + capture) ---- */
 

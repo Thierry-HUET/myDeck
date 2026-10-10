@@ -41,7 +41,7 @@ settings = { theme: { bg, color, accent, heading, body }, lastDeck }
 
 ### 3.1 Layouts
 
-Deux modes, commutables par le bouton de la barre d'outils et persistés dans `settings.layout.mode` :
+Deux modes, réglés depuis la **page Paramètres** et persistés dans `settings.layout.mode` :
 
 - **horizontal** (défaut) : éditeurs Markdown/CSS empilés à gauche, WYSIWYG à droite ;
 - **vertical** : WYSIWYG en haut, bloc création en bas — Markdown à gauche, CSS à droite.
@@ -55,7 +55,7 @@ Deux modes, commutables par le bouton de la barre d'outils et persistés dans `s
 
 ### 3.3 Fonctions
 
-- Barre d'outils WYSIWYG : sélecteur de deck, navigation ←/→ avec compteur `n / total`, bascule de layout, enregistrement (`💾`), création de deck (`+ Nouveau`).
+- Barre d'outils WYSIWYG : sélecteur de deck, navigation ←/→ avec compteur `n / total`, enregistrement (`💾`), création de deck (`+ Nouveau`).
 - Bouton `+ slide` : insère `\n\n---\n\n` à la position du curseur dans le Markdown.
 - Le CSS du deck est injecté en direct dans l'aperçu (`<style data-deck-css>`).
 - La navigation clavier de l'aperçu est inactive quand le focus est dans un éditeur.
@@ -71,6 +71,8 @@ Deux modes, commutables par le bouton de la barre d'outils et persistés dans `s
 ## 5. Page Paramétrage
 
 - Thème : fond (couleur ou gradient), couleur de texte, accent, polices — appliqué globalement via variables CSS sur `:root`.
+- **Polices** : menus déroulants alimentés par les polices détectées dans le navigateur (`document.fonts.check` sur une liste candidate + familles génériques). L'import de polices extérieures (Google Fonts) est prévu dans la TODO.
+- **Disposition (page Création)** : sélecteur du mode (horizontal / vertical), persisté dans `settings.layout.mode`.
 - Gestion des decks : liste, suppression.
 - Export/import JSON (decks + settings).
 

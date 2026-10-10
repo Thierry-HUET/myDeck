@@ -7,6 +7,7 @@
 
 ## 🛠️ Améliorations
 
+- [ ] **Importer des polices extérieures** (Google Fonts & co.) : chargement dynamique via `<link>` ou CSS `@import` + ajout automatique dans les menus déroulants des polices.
 - [ ] **Transitions** entre slides (fondu, glissement) pilotables par une variable CSS `--transition`.
 - [ ] **Fragments** : affichage progressif des listes (une pression = un élément) via un marqueur Markdown (`- <!--frag-->`).
 - [ ] **Numérotation de slide** optionnelle (coin bas-droit) activable par variable CSS.
