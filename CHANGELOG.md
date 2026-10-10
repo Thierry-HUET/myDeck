@@ -2,6 +2,13 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.9.1] — 2026-10-10
+
+### Ajouté
+
+- **Insertion assistée de slides** : boutons **+ slide**, **+ titre**, **+ section** dans l'éditeur Markdown (insertion à la position du curseur, blocs de template pré-remplis).
+- **Mise en forme ciblée dans une slide** : classes utilitaires intégrées — `<span class="accent|muted|warn|ok|err">`, `<p class="highlight">`, `<mark>` ; couleur libre via HTML inline (`style="color: …"`) ; classes personnalisables via le CSS du deck.
+
 ## [0.9.0] — 2026-10-10
 
 ### Ajouté

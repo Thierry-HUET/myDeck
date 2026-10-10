@@ -83,6 +83,21 @@ Balisage complémentaire dans le `.md` — une slide peut être préfixée d'un 
 - **Templates personnalisés** : tout autre nom (`::{citation}`, `::{question}`…) est rendu sans style particulier par défaut ; on le définit dans le **CSS du deck** via `.slide.tpl-citation { … }`.
 - Sans bloc template, l'heuristique historique est conservée (slide commençant par `#` = centrée).
 
+### 4.1 Mise en forme ciblée (mot ou paragraphe coloré)
+
+Le Markdown laisse passer le **HTML inline** — trois niveaux, du plus recommandé au plus libre :
+
+1. **Classes utilitaires intégrées** (suivent le thème, définies dans `slides.css`) :
+   - mot : `<span class="accent">mot</span>` (couleur d'accent), `.muted` (atténué), `.warn` / `.ok` / `.err` (orange / vert / rouge) ;
+   - paragraphe : `<p class="highlight">paragraphe mis en avant</p>` (fond léger + barre d'accent) ;
+   - surlignage : `<mark>mot</mark>`.
+2. **Couleur libre** : `<span style="color: tomato">mot</span>` ou `<p style="color: #f59e0b">…</p>`.
+3. **Classes personnalisées** : définies dans le CSS du deck (`.slide .ma-classe { … }`), utilisées dans le Markdown.
+
+### 4.2 Insertion assistée (page Création)
+
+Trois boutons dans l'éditeur Markdown : **+ slide** (standard), **+ titre** (bloc `::{title}` pré-rempli), **+ section** (bloc `::{section}` pré-rempli) — insertion à la position du curseur.
+
 ## 5. Page Visualisation
 
 - Charge le deck indiqué (`?id=`), sinon le dernier utilisé, sinon le premier.

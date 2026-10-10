@@ -21,7 +21,13 @@ export function mount(app) {
     <div class="create-page mode-${layout.mode}" id="cp">
       <div class="editors" id="editors">
         <section class="editor">
-          <h3>📝 Markdown <button id="btn-sep" class="mini" title="Insérer un séparateur de slide">+ slide</button></h3>
+          <h3>📝 Markdown
+            <span class="insert-group">
+              <button id="btn-sep" class="mini" title="Insérer une slide standard">+ slide</button>
+              <button id="btn-tpl-title" class="mini" title="Insérer une slide de titre (template title)">+ titre</button>
+              <button id="btn-tpl-section" class="mini" title="Insérer un intercalaire de section (template section)">+ section</button>
+            </span>
+          </h3>
           <textarea id="ed-md" spellcheck="false"></textarea>
         </section>
         <div class="splitter sub-split" data-split="sub" title="Glisser pour redimensionner"><span></span></div>
@@ -137,15 +143,23 @@ export function mount(app) {
   app.querySelector('#btn-prev').addEventListener('click', () => { idx = Math.max(0, idx - 1); update(); dirty = true; });
   app.querySelector('#btn-next').addEventListener('click', () => { idx = Math.min(slides.length - 1, idx + 1); update(); dirty = true; });
 
-  app.querySelector('#btn-sep').addEventListener('click', () => {
+  /* Insertion à la position du curseur : séparateur + contenu optionnel */
+  const insertAtCursor = (sep, body = '') => {
     const p = edMd.selectionStart;
     const before = edMd.value.slice(0, p);
     const after = edMd.value.slice(p);
-    edMd.value = before.replace(/\s*$/, '') + '\n\n---\n\n' + after.replace(/^\s*/, '');
-    edMd.selectionStart = edMd.selectionEnd = p + 7;
+    edMd.value = before.replace(/\s*$/, '') + '\n\n' + sep + '\n\n' + body + after.replace(/^\s*/, '');
+    const np = p + 6 + sep.length + (body ? body.length : 0);
+    edMd.selectionStart = edMd.selectionEnd = np;
     edMd.focus();
     update();
-  });
+  };
+
+  app.querySelector('#btn-sep').addEventListener('click', () => insertAtCursor('---'));
+  app.querySelector('#btn-tpl-title').addEventListener('click', () =>
+    insertAtCursor('---', '::{title}\n# Titre\n\n*Sous-titre*\n::\n'));
+  app.querySelector('#btn-tpl-section').addEventListener('click', () =>
+    insertAtCursor('---', '::{section}\n# Section\n\n*Sous-titre de section*\n::\n'));
 
   /* Fichier .mdk lié au deck courant — affiché dans le titre du bouton */
   const saveBtn = app.querySelector('#btn-save');
