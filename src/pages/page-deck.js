@@ -39,11 +39,13 @@ export function mount(app) {
         <h3>Structure d'un deck</h3>
         <p>Un deck est un <strong>répertoire</strong>, pas un fichier :</p>
         <pre class="deck-structure">MonDeck/
+├── mydeck.json    manifeste : version du format deck
 ├── deck.md        Markdown du deck
 ├── style.css       style du deck
 ├── images/         images et SVG référencés (ex. ![](images/logo.svg))
 └── versions/       versions antérieures de deck.md</pre>
         <p class="muted">À chaque <em>Enregistrer</em>, l'ancien <code>deck.md</code> est archivé dans <code>versions/</code> (les 10 dernières versions sont conservées).</p>
+        <p class="muted">Le manifeste <code>mydeck.json</code> porte la <strong>version du format</strong> du deck (actuellement <code>${deckfs.DECK_FORMAT}</code>) pour assurer la compatibilité : un deck créé par une version plus récente de myDeck est signalé à l'ouverture.</p>
         <p class="muted">L'accès aux répertoires utilise la File System Access API (Chrome, Edge, Opera). Sur Firefox/Safari, utilisez <em>Exporter</em> ou l'import/export JSON des Paramètres.</p>
       </section>
     </div>`;
@@ -76,6 +78,15 @@ export function mount(app) {
     }
     try {
       const d = await deckfs.openDeck();
+      if (d.format && !deckfs.isFormatSupported(d.format)) {
+        const go = confirm(
+          `Ce deck a été créé avec un format plus récent (${d.format} > ${deckfs.DECK_FORMAT}).\n` +
+          `myDeck ne garantit pas la compatibilité : l'enregistrer pourrait le rendre inutilisable par cette version.\n\nL'ouvrir quand même ?`
+        );
+        if (!go) return;
+      } else if (!d.format && (d.md || d.css)) {
+        alert('Deck sans manifeste mydeck.json (ancien format) — il sera mis au format ' + deckfs.DECK_FORMAT + ' au prochain enregistrement.');
+      }
       if (!d.md && !d.css) {
         const ok = confirm('Ce répertoire ne contient pas de deck.md — l\'initialiser comme nouveau deck ?');
         if (!ok) return;

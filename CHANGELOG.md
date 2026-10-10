@@ -2,6 +2,13 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.5.1] — 2026-10-10
+
+### Ajouté
+
+- **Version du format deck** dans chaque répertoire : manifeste `mydeck.json` (`format`, `name`, `savedAt`), mis à jour à chaque enregistrement et embarqué dans l'export ZIP.
+- **Contrôle de compatibilité** à l'ouverture : avertissement si le deck provient d'un format plus récent que celui supporté ; les decks sans manifeste (ancien format) sont signalés et mis au format courant au prochain enregistrement.
+
 ## [0.5.0] — 2026-10-10
 
 ### Ajouté

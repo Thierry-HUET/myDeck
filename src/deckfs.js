@@ -10,6 +10,10 @@
 const IMG_EXT = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
 const MAX_VERSIONS = 10;
 
+/* Version du format deck (compatibilité ascendante) — incrémenter lors d'un
+   changement de structure du répertoire (nouveaux fichiers, sémantique modifiée). */
+export const DECK_FORMAT = '1.0';
+
 let dir = null;                 // FileSystemDirectoryHandle lié
 const imgFiles = new Map();     // nom de fichier -> File
 const imgUrls = new Map();      // nom de fichier -> objectURL
@@ -63,14 +67,41 @@ export function applyDeckImages(container) {
   });
 }
 
+/* ---------- manifeste du deck (mydeck.json) ---------- */
+
+async function readMeta() {
+  try {
+    const fh = await dir.getFileHandle('mydeck.json');
+    return JSON.parse(await (await fh.getFile()).text());
+  } catch { return null; }
+}
+
+async function writeMeta(deck) {
+  const meta = {
+    format: DECK_FORMAT,
+    name: deck?.name || dir.name,
+    savedAt: new Date().toISOString(),
+  };
+  await writeText('mydeck.json', JSON.stringify(meta, null, 2) + '\n');
+}
+
+/** Compare une version de format deck "1.2" à la version supportée. */
+export function isFormatSupported(v) {
+  if (!v) return true; // deck sans manifeste (première génération)
+  const cur = DECK_FORMAT.split('.').map(Number);
+  const got = String(v).split('.').map(Number);
+  return (got[0] || 0) < cur[0] || ((got[0] || 0) === cur[0] && (got[1] || 0) <= cur[1]);
+}
+
 /* ---------- ouverture ---------- */
 
 export async function openDeck() {
   dir = await window.showDirectoryPicker({ id: 'mydeck-open', mode: 'readwrite' });
+  const meta = await readMeta();
   const md = await readText('deck.md');
   const css = await readText('style.css');
   await loadImages();
-  return { name: dir.name, md, css };
+  return { name: dir.name, md, css, format: meta?.format || null };
 }
 
 /* ---------- gestion des versions du deck.md ---------- */
@@ -110,6 +141,7 @@ export async function saveDeck(deck) {
   const archived = await archivePreviousMd(deck.md || '');
   await writeText('deck.md', deck.md || '');
   await writeText('style.css', deck.css || '');
+  await writeMeta(deck);
   return { archived };
 }
 
@@ -119,7 +151,8 @@ export async function saveDeckAs(deck) {
   await getSub('images', true);
   await getSub('versions', true);
   await loadImages();
-  return saveDeck(deck);
+  const res = await saveDeck(deck);
+  return { ...res, format: DECK_FORMAT };
 }
 
 /* ---------- export ZIP (méthode « store », sans dépendance) ---------- */
@@ -200,6 +233,7 @@ function zipStore(files) { // files : [{ name, data: Uint8Array }]
 export async function exportZip(deck) {
   const enc = new TextEncoder();
   const files = [
+    { name: 'mydeck.json', data: enc.encode(JSON.stringify({ format: DECK_FORMAT, name: deck.name || 'deck', exportedAt: new Date().toISOString() }, null, 2) + '\n') },
     { name: 'deck.md', data: enc.encode(deck.md || '') },
     { name: 'style.css', data: enc.encode(deck.css || '') },
   ];
