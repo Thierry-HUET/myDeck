@@ -3,28 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>myDeck — Présentations en Markdown</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>myDeck Studio</title>
 </head>
 <body>
-  <main id="stage">
-    <section id="slide" class="slide"></section>
-  </main>
-
-  <div id="progress"></div>
-
-  <nav id="hud">
-    <button id="btn-prev" title="Slide précédente (←)">←</button>
-    <span id="counter">– / –</span>
-    <button id="btn-next" title="Slide suivante (→)">→</button>
-    <button id="btn-full" title="Plein écran (F)">⛶</button>
-    <button id="btn-overview" title="Vue d'ensemble (O)">▦</button>
-  </nav>
-
-  <section id="overview" class="hidden"></section>
-
-  <!-- Rendu Markdown via marked (CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
-  <script src="app.js"></script>
+  <header id="topbar">
+    <a href="#/" class="brand">my<span>Deck</span></a>
+    <nav>
+      <a href="#/create">✏️ Création</a>
+      <a href="#/">▶️ Visualisation</a>
+      <a href="#/settings">⚙️ Paramètres</a>
+    </nav>
+  </header>
+  <main id="app"></main>
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>

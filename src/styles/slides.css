@@ -1,0 +1,74 @@
+/* ============================================================
+   slides.css — style des slides (partagé visualisation + WYSIWYG)
+   Importé par global.css ? Non : importé là où des slides s'affichent.
+   ============================================================ */
+
+.slide {
+  aspect-ratio: 16 / 9;
+  background: var(--slide-bg);
+  color: var(--slide-color);
+  padding: 4% 6%;
+  font-size: clamp(1rem, 1.1vw + 0.6rem, 2rem);
+  line-height: 1.45;
+  border-radius: 10px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  font-family: var(--font-body);
+}
+
+.slide.title-slide {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.slide h1, .slide h2, .slide h3 {
+  font-family: var(--font-heading);
+  line-height: 1.15;
+  margin: 0 0 0.5em;
+}
+.slide h1 { font-size: 2.4em; }
+.slide h2 { font-size: 1.7em; color: var(--accent); }
+.slide h3 { font-size: 1.25em; font-weight: 600; }
+
+.slide ul, .slide ol { margin: 0.25em 0; }
+.slide li { margin: 0.3em 0; }
+.slide li::marker { color: var(--accent); }
+
+.slide blockquote {
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  border-left: 4px solid var(--accent);
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.slide code {
+  font-family: ui-monospace, Consolas, "Courier New", monospace;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.slide pre {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.8em 1em;
+  overflow: auto;
+}
+.slide pre code { background: none; padding: 0; }
+
+.slide a { color: var(--accent); text-decoration: none; }
+.slide a:hover { text-decoration: underline; }
+
+.slide img { max-width: 100%; max-height: 60%; border-radius: 8px; }
+
+.slide table { border-collapse: collapse; margin: 0.5em 0; font-size: 0.9em; }
+.slide th, .slide td { border: 1px solid rgba(255, 255, 255, 0.25); padding: 0.4em 0.8em; }
+.slide th { background: rgba(255, 255, 255, 0.1); color: var(--accent); }
+
+.slide .error { color: #fca5a5; font-size: 1.2rem; text-align: center; }

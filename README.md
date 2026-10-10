@@ -1,68 +1,29 @@
 # myDeck
 
-> Affichez des présentations type PowerPoint à partir d'un simple fichier **Markdown** (`.md`) et d'une feuille de style **CSS**.
+> Créez et présentez des slides type PowerPoint à partir de fichiers **Markdown** (`.md`) et de feuilles de style **CSS**, dans une application web **Node.js + Vite**.
 
-## ✨ Fonctionnalités
+## 🏗️ Architecture
 
-- **Slides en Markdown** : une ligne `---` sépare deux slides
-- Rendu complet : titres, listes, tableaux, code, citations, images, liens
-- **Thème 100 % personnalisable** via `style.css` (variables CSS)
-- Navigation : clavier (`←` `→`, `Espace`, `Home`/`End`), tactile (swipe), clic
-- **Plein écran** (`F`), **vue d'ensemble** (`O`)
-- **Impression / PDF** : une slide par page (`Ctrl+P`)
-- Deep-link : `index.html#4` ouvre directement la slide 4
+Application Node.js (Vite), visualisation dans le navigateur, trois pages (routage par hash) :
+
+| Page | Route | Contenu |
+|------|-------|---------|
+| **Création** | `#/create` | À gauche : éditeur Markdown + éditeur CSS (empilés, ½ hauteur chacun). À droite : aperçu **WYSIWYG** de la slide courante |
+| **Visualisation** | `#/` | Présentation plein écran : navigation clavier/tactile/clic, vue d'ensemble, impression 1 slide/page |
+| **Paramètres** | `#/settings` | Thème (variables CSS), gestion des decks, import/export JSON |
+
+Les decks (Markdown + CSS) sont persistés dans le **localStorage** du navigateur ; le deck d'exemple est chargé automatiquement au premier lancement.
 
 ## 🚀 Démarrage
 
-Le chargement du `.md` utilise `fetch()` : il faut donc un petit serveur HTTP local (et non l'ouverture directe du fichier).
-
 ```bash
-# Option 1 : Python
-python3 -m http.server 8000
-# puis ouvrir http://localhost:8000
-
-# Option 2 : VS Code
-# Installer l'extension "Live Server" → clic droit sur index.html → "Open with Live Server"
-
-# Option 3 : Node
-npx serve
+npm install     # vite + marked
+npm run dev     # http://localhost:5173
+npm run build   # build de production dans dist/
+npm run preview # prévisualiser le build
 ```
 
-## 📄 Format du deck
-
-Éditez `deck.md` (ou passez un autre fichier via `?deck=mon-fichier.md`) :
-
-```md
-# Titre de la présentation          ← slide de titre
-## Sous-titre
-
----
-
-## Deuxième slide
-
-- **Gras**, *italique*, `code`
-- [Liens](https://github.com)
-
----
-
-# Merci !
-```
-
-## 🎨 Thème
-
-Tout le style est concentré dans `style.css`, piloté par des variables :
-
-```css
-:root {
-  --slide-bg: linear-gradient(135deg, #0f172a, #1e293b);
-  --slide-color: #f8fafc;
-  --accent: #38bdf8;
-}
-```
-
-Changez ces trois lignes (ou le fichier entier) pour obtenir votre identité visuelle, sans toucher au code.
-
-## ⌨️ Raccourcis
+## ⌨️ Raccourcis (page Visualisation)
 
 | Touche | Action |
 |--------|--------|
@@ -70,7 +31,29 @@ Changez ces trois lignes (ou le fichier entier) pour obtenir votre identité vis
 | `Home` / `End` | Première / dernière slide |
 | `F` | Plein écran |
 | `O` | Vue d'ensemble (miniatures) |
-| `Ctrl+P` | Impression / PDF |
+| `Ctrl+P` | Impression / PDF (1 slide par page) |
+
+## 📄 Format du deck
+
+- Une ligne `---` sépare deux slides.
+- Un bloc commençant par `#` est rendu comme slide de titre (centrée).
+- Le CSS du deck (éditeur de droite) surcharge le thème global — chaque deck peut avoir son propre style.
+- Le thème global (couleurs, polices, fond) se règle dans **Paramètres** et s'applique à tous les decks.
+
+## 📂 Structure
+
+```
+index.html              coquille + navigation
+src/main.js             routeur (hash) : #/ #/create #/settings
+src/store.js            localStorage : decks, settings, thème
+src/md2slides.js        Markdown → slides (marked.js)
+src/pages/page-create.js     éditeurs MD/CSS + WYSIWYG
+src/pages/page-view.js       présentation
+src/pages/page-settings.js   paramétrage
+src/styles/             global.css (app) + slides.css (slides)
+public/                 deck d'exemple (deck.md, style.css)
+legacy/                 visualiseur statique v0.1 (fichier unique)
+```
 
 ## 📜 Licence
 

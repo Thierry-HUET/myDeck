@@ -2,6 +2,22 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.2.0] — 2026-10-10
+
+### Ajouté
+
+- **Application Node.js + Vite** : `npm run dev / build / preview` (remplace le visualiseur statique, conservé dans `legacy/`).
+- **Routage par hash** : 3 pages — Création (`#/create`), Visualisation (`#/`), Paramètres (`#/settings`).
+- **Page Création** : éditeur Markdown + éditeur CSS empilés à gauche (½ hauteur chacun), aperçu **WYSIWYG** live à droite, navigation de slides, bouton d'insertion `+ slide`, multi-decks avec sélecteur.
+- **Page Paramètres** : thème par variables CSS (fond, texte, accent, polices), suppression de decks, export/import JSON.
+- **Persistance localStorage** : decks ({id, name, md, css, updatedAt}) et settings ; deck d'exemple chargé automatiquement au premier lancement.
+- Nettoyage des écouteurs entre pages (fonction cleanup retournée par chaque page).
+
+### Modifié
+
+- Structure du projet : sources dans `src/` (pages, styles, store, moteur md2slides), assets dans `public/`, visualiseur v0.1 déplacé dans `legacy/`.
+- README et SPECIFICATION réécrits pour la nouvelle architecture.
+
 ## [0.1.0] — 2026-10-10
 
 ### Ajouté
