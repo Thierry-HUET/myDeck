@@ -2,6 +2,24 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.6.5] — 2026-10-10
+
+### Corrigé
+
+- **Port Vite strict** (`strictPort: true`) : quand 5173 était occupé, Vite basculait sur 5174 — une autre *origine* pour le navigateur, où IndexedDB (lien deck ↔ fichier .mdk) et les permissions accordées n'existent pas. Le sélecteur s'ouvrait donc à chaque session. myDeck refuse désormais de démarrer sur un autre port ; fermez l'autre instance (ou l'application occupant 5173) au lieu de changer d'origine.
+
+## [0.6.4] — 2026-10-10
+
+### Corrigé
+
+- **Handle .mdk lié à l'ID du deck** (et non plus global) : chaque deck retrouve son propre fichier ; plus de risque d'écrire le deck B dans le fichier du deck A.
+- `restoreSaveHandle` : restauration fiabilisée (reset propre avant lecture IndexedDB).
+
+### Ajouté
+
+- **Visibilité du fichier lié** : info-bulle du bouton Enregistrer (page Création) et statut de la page Deck (« fichier lié : … »).
+- **Diagnostic explicite** : si le sélecteur s'ouvre, la raison est affichée (« aucun-fichier-lié », « permission-refusée », « fichier-introuvable »).
+
 ## [0.6.3] — 2026-10-10
 
 ### Corrigé
