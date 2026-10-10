@@ -170,7 +170,7 @@ export function mount(app) {
       const r = await mdkSave(current);   // restaure l'emplacement en cours (IndexedDB) si besoin
       if (r && !r.cancelled) {
         if (r.where === 'download') msg = '✓ .mdk téléchargé';
-        else msg = `✓ ${r.filename}`;
+        else msg = r.folder ? `✓ ${r.folder}/${r.filename}` : `✓ ${r.filename}`;
         if (r.reason) alert(`Info : ${r.reason}`);
       }
       refreshLinked();

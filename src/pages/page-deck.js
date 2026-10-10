@@ -37,6 +37,14 @@ export function mount(app) {
       </section>
 
       <section class="card">
+        <h3>Dossier des decks</h3>
+        <p id="d-lib-list" class="muted"></p>
+        <div class="card-actions">
+          <button id="d-lib-change">📁 Changer de dossier…</button>
+        </div>
+      </section>
+
+      <section class="card">
         <h3>Comment ça marche</h3>
         <p>La copie de travail du deck est <strong>en cache dans le navigateur</strong> : vous pouvez modifier et prévisualiser sans rien écrire sur le disque.</p>
         <p>Sur le disque, un deck est <strong>un fichier unique <code>&lt;nom&gt;.mdk</code></strong> — une archive ZIP contenant toute l'arborescence du projet :</p>
@@ -114,7 +122,7 @@ export function mount(app) {
       updateStatus();
       alert(r.where === 'download'
         ? `Deck « ${deck.name} » enregistré : ${r.filename} (téléchargement).`
-        : `Deck « ${deck.name} » enregistré : ${r.filename}.`);
+        : `Deck « ${deck.name} » enregistré : ${r.folder ? r.folder + '/' : ''}${r.filename}`);
     } catch (e) {
       alert('Enregistrement impossible : ' + e.message);
     }
@@ -146,6 +154,24 @@ export function mount(app) {
     } catch (e) {
       alert('Export impossible : ' + e.message);
     }
+  });
+
+  /* ---- Dossier des decks : liste + changement ---- */
+  const refreshLibList = async () => {
+    const el = app.querySelector('#d-lib-list');
+    const lib = await deckfs.getLibraryName();
+    const files = await deckfs.listLibraryMdk();
+    if (!lib) { el.textContent = 'Aucun dossier des decks désigné (il sera demandé au premier enregistrement).'; return; }
+    el.textContent = files && files.length
+      ? `Dossier « ${lib} » — decks : ${files.join(', ')}`
+      : `Dossier « ${lib} » — aucun fichier .mdk pour le moment.`;
+  };
+  await refreshLibList();
+  app.querySelector('#d-lib-change').addEventListener('click', async () => {
+    try {
+      const name = await deckfs.changeLibrary();
+      if (name) { await refreshLibList(); await updateStatus(); }
+    } catch (e) { alert('Changement de dossier impossible : ' + e.message); }
   });
 
   /* ---- Paramètres ---- */

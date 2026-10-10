@@ -70,6 +70,24 @@ export async function getLinkedFileName(deckId) {
 
 let libHandle = null;   // FileSystemDirectoryHandle du dossier des decks
 
+/** Change de dossier des decks (re-choix explicite par l'utilisateur). */
+export async function changeLibrary() {
+  const h = await chooseLibrary();
+  return h ? h.name : null;
+}
+
+/** Liste les fichiers .mdk présents dans le dossier des decks (retour de visibilité). */
+export async function listLibraryMdk() {
+  const lib = await ensureLibrary();
+  if (!lib) return null;
+  const names = [];
+  for await (const [name, handle] of lib.entries()) {
+    if (handle.kind === 'file' && /\.mdk$/i.test(name)) names.push(name);
+  }
+  names.sort();
+  return names;
+}
+
 export async function getLibraryName() {
   if (libHandle) return libHandle.name;
   try { const h = await idbGet('library'); return h?.name ?? null; } catch { return null; }
@@ -395,7 +413,7 @@ export async function saveDeck(deck) {
     const w = await fh.createWritable();
     await w.write(blob);
     await w.close();
-    return { filename, where: 'library' };
+    return { filename, where: 'library', folder: lib.name };
   } catch (e) {
     if (e.name === 'NotAllowedError') { libHandle = null; return { cancelled: true, reason: 'permission-refusée' }; }
     throw e;

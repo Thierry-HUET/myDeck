@@ -2,6 +2,13 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.7.1] — 2026-10-10
+
+### Ajouté
+
+- **Visibilité de l'emplacement d'enregistrement** : les retours d'« Enregistrer » (page Création et page Deck) affichent `dossier/nom-du-deck.mdk`. Note : par sécurité, les navigateurs ne révèlent jamais le chemin absolu d'un dossier choisi — seul son nom est accessible.
+- **Page Deck, carte « Dossier des decks »** : nom du dossier désigné + liste des fichiers `.mdk` qu'il contient, et bouton **« Changer de dossier… »** pour re-ancrer la sauvegarde à un emplacement connu.
+
 ## [0.7.0] — 2026-10-10
 
 ### Ajouté
