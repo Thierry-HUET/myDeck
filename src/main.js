@@ -2,7 +2,7 @@ import './styles/global.css';
 import './styles/slides.css';
 import { ensureSample, applyTheme } from './store.js';
 
-const routes = { '': 'view', 'create': 'create', 'settings': 'settings' };
+const routes = { '': 'view', 'create': 'create', 'deck': 'deck', 'settings': 'settings' };
 const app = document.getElementById('app');
 let cleanup = null;
 

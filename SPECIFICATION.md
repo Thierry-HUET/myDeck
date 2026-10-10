@@ -16,6 +16,7 @@ myDeck est une application web de création et de présentation de slides type P
 |-------|------|------|
 | `#/create` | Création | Éditeur Markdown + éditeur CSS à gauche (chacun ½ hauteur), aperçu WYSIWYG à droite |
 | `#/` | Visualisation | Présentation plein écran, navigation, impression |
+| `#/deck` | Deck | Menu deck : Nouveau, Ouvrir, Enregistrer, Enregistrer sous, Exporter, Paramètres |
 | `#/settings` | Paramétrage | Thème, gestion des decks, import/export JSON |
 
 ### 2.2 Modules
@@ -24,6 +25,7 @@ myDeck est une application web de création et de présentation de slides type P
 src/main.js            — routeur : résout #/xxx → src/pages/page-xxx.js, gère le nettoyage des écouteurs
 src/store.js           — decks et settings en localStorage, application du thème (variables CSS)
 src/md2slides.js       — splitSlides (---), md2html (marked), renderSlideInto, applyDeckCss
+src/deckfs.js          — decks sur disque (File System Access API), versions du deck.md, export ZIP
 src/pages/page-*       — une fonction mount(app) par page, retourne un cleanup optionnel
 src/styles/global.css  — coquille applicative (barre, éditeurs, HUD, formulaires)
 src/styles/slides.css  — style des .slide (partagé WYSIWYG et visualisation)
@@ -68,7 +70,33 @@ Deux modes, réglés depuis la **page Paramètres** et persistés dans `settings
 - Barre de progression + compteur ; deep-link `#4` (slide 4).
 - `Ctrl+P` : impression une slide par page (`#print-deck` + `page-break-after`).
 
-## 5. Page Paramétrage
+## 5. Page Deck (`#/deck`)
+
+Un **deck** est un répertoire (pas un fichier) :
+
+```
+MonDeck/
+├── deck.md     — contenu Markdown
+├── style.css    — style du deck
+├── images/      — images et SVG référencés par le Markdown
+└── versions/    — versions antérieures de deck.md
+```
+
+### 5.1 Menu
+
+- **Nouveau deck** : crée un deck vierge (nom demandé) et ouvre la page Création.
+- **Ouvrir…** : lie un répertoire via `showDirectoryPicker`, charge `deck.md` + `style.css` et référence les fichiers de `images/` (les `![](images/x)` sont résolus en aperçu). Un deck homonyme existant est mis à jour au lieu d'être dupliqué.
+- **Enregistrer** : écrit `deck.md` et `style.css` dans le répertoire lié ; si `deck.md` diffère, l'ancien contenu est archivé dans `versions/deck-AAAAMMJJ_hhmmss.md` (10 dernières versions conservées, purge automatique).
+- **Enregistrer sous…** : choisit un nouveau répertoire (`images/` et `versions/` créés), y écrit le deck et le lie.
+- **Exporter** : télécharge le deck en **ZIP** (`deck.md`, `style.css`, `images/*`), sans compression, sans dépendance.
+- ────────────
+- **Paramètres** : accède à la page Paramétrage (`#/settings`).
+
+### 5.2 Support navigateur
+
+L'accès aux répertoires repose sur la **File System Access API** (Chrome, Edge, Opera). Sur les autres navigateurs, la page signale la limitation ; l'import/export JSON des Paramètres reste disponible.
+
+## 6. Page Paramétrage
 
 - Thème : fond (couleur ou gradient), couleur de texte, accent, polices — appliqué globalement via variables CSS sur `:root`.
 - **Polices** : menus déroulants alimentés par les polices détectées dans le navigateur (`document.fonts.check` sur une liste candidate + familles génériques). L'import de polices extérieures (Google Fonts) est prévu dans la TODO.
@@ -76,7 +104,7 @@ Deux modes, réglés depuis la **page Paramètres** et persistés dans `settings
 - Gestion des decks : liste, suppression.
 - Export/import JSON (decks + settings).
 
-## 6. Contraintes techniques
+## 7. Contraintes techniques
 
 - **Navigateurs** : ES2020+ (Chrome/Edge/Firefox/Safari récents).
 - **Aucun backend** : tout est client ; `npm run dev` (Vite) pour le développement, `npm run build` pour la production (dossier `dist/` déployable sur tout hébergeur statique).

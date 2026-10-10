@@ -3,6 +3,7 @@
    ============================================================ */
 import { getDecks, getDeck, getSettings } from '../store.js';
 import { splitSlides, renderSlideInto, applyDeckCss, md2html } from '../md2slides.js';
+import { applyDeckImages } from '../deckfs.js';
 
 export function mount(app) {
   const params = new URLSearchParams(location.search);
@@ -54,6 +55,7 @@ export function mount(app) {
 
   const update = () => {
     renderSlideInto(slideEl, slides[idx]);
+    applyDeckImages(slideEl);
     counter.textContent = `${idx + 1} / ${slides.length}`;
     progress.style.width = ((idx + 1) / slides.length) * 100 + '%';
     history.replaceState(null, '', location.pathname + location.search + '#' + (idx + 1));

@@ -7,6 +7,7 @@
    ============================================================ */
 import { getDecks, getDeck, getSettings, saveSettings, saveDeck, newDeck } from '../store.js';
 import { splitSlides, renderSlideInto, applyDeckCss } from '../md2slides.js';
+import { applyDeckImages } from '../deckfs.js';
 
 const DEFAULT_LAYOUT = { mode: 'horizontal', main: 50, sub: 50 };
 
@@ -124,7 +125,7 @@ export function mount(app) {
   const update = () => {
     slides = splitSlides(edMd.value);
     idx = Math.min(idx, Math.max(0, slides.length - 1));
-    if (slides.length) renderSlideInto(slideEl, slides[idx]);
+    if (slides.length) { renderSlideInto(slideEl, slides[idx]); applyDeckImages(slideEl); }
     else slideEl.innerHTML = '<p class="error">Deck vide — ajoutez du contenu Markdown.</p>';
     counter.textContent = `${slides.length ? idx + 1 : 0} / ${slides.length}`;
     applyDeckCss(stage, edCss.value);

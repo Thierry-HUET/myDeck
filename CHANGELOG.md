@@ -2,6 +2,20 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.5.0] — 2026-10-10
+
+### Ajouté
+
+- **Page Deck** (`#/deck`) : le menu remplace « Paramètres » dans la barre supérieure. Fonctions : **Nouveau**, **Ouvrir**, **Enregistrer**, **Enregistrer sous**, **Exporter (ZIP)**, séparateur, **Paramètres** — icônes flat sobres (SVG inline).
+- **Deck = répertoire** : `deck.md` + `style.css` + `images/` (images et SVG) + `versions/`. Ouverture/écriture via la **File System Access API**.
+- **Gestion des versions du Markdown** : à chaque enregistrement, l'ancien `deck.md` est archivé dans `versions/deck-<horodatage>.md` (10 dernières versions conservées, purge automatique).
+- **Export ZIP** du deck (`deck.md`, `style.css`, `images/*`) — écriture ZIP native sans dépendance.
+- **Images des decks** : les `![](images/…)` sont résolus en aperçu WYSIWYG et en visualisation quand un répertoire est lié.
+
+### Modifié
+
+- Barre supérieure : « ⚙️ Paramètres » → « Deck » ; la page Paramètres reste accessible depuis le menu Deck.
+
 ## [0.4.1] — 2026-10-10
 
 ### Ajouté
