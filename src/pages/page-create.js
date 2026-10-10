@@ -7,7 +7,7 @@
    ============================================================ */
 import { getDecks, getDeck, getSettings, saveSettings, saveDeck as storeDeck, newDeck } from '../store.js';
 import { splitSlides, renderSlideInto, applyDeckCss } from '../md2slides.js';
-import { applyDeckImages, saveDeck as mdkSave } from '../deckfs.js';
+import { applyDeckImages, saveDeck as mdkSave, getLinkedFileName } from '../deckfs.js';
 
 const DEFAULT_LAYOUT = { mode: 'horizontal', main: 50, sub: 50 };
 
@@ -147,7 +147,15 @@ export function mount(app) {
     update();
   });
 
-  app.querySelector('#btn-save').addEventListener('click', async () => {
+  /* Fichier .mdk lié au deck courant — affiché dans le titre du bouton */
+  const saveBtn = app.querySelector('#btn-save');
+  const refreshLinked = async () => {
+    const f = await getLinkedFileName(deck.id);
+    saveBtn.title = f ? `Enregistrer — fichier lié : ${f}` : 'Enregistrer — aucun fichier .mdk lié (le sélecteur s\'ouvrira)';
+  };
+  refreshLinked();
+
+  saveBtn.addEventListener('click', async () => {
     const current = { ...deck, md: edMd.value, css: edCss.value };
     storeDeck(current);            // 1) cache navigateur
     const b = app.querySelector('#btn-save');
@@ -157,8 +165,15 @@ export function mount(app) {
     try {
       const r = await mdkSave(current);   // restaure l'emplacement en cours (IndexedDB) si besoin
       if (r && !r.cancelled) {
-        msg = r.where === 'download' ? '✓ .mdk téléchargé' : '✓ Enregistré (.mdk)';
+        if (r.where === 'handle') msg = `✓ ${r.filename}`;
+        else if (r.where === 'download') msg = '✓ .mdk téléchargé';
+        else msg = `✓ ${r.filename}`;
+        /* Raison pour laquelle l'explorateur a été ouvert (diagnostic) */
+        if (r.reason && r.reason !== 'aucun-fichier-lié') {
+          alert(`Sélecteur ouvert : ${r.reason}.`);
+        }
       }
+      refreshLinked();
     } catch (e) {
       if (e && e.name !== 'AbortError') { alert('Enregistrement .mdk impossible : ' + e.message); }
     }

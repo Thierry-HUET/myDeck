@@ -53,15 +53,14 @@ export function mount(app) {
 
   const status = app.querySelector('#d-status');
   const currentDeck = () => getDeck(getSettings().lastDeck) || getDecks()[0] || null;
-  const updateStatus = () => {
+  const updateStatus = async () => {
     const deck = currentDeck();
     const parts = [];
     parts.push(deck ? `Deck en cache : « ${deck.name} »` : 'Aucun deck en cache');
-    parts.push(deckfs.saveHandleName()
-      ? `fichier : ${deckfs.saveHandleName()}`
-      : 'aucun fichier .mdk lié cette session');
+    const linked = deck ? await deckfs.getLinkedFileName(deck.id) : null;
+    parts.push(linked ? `fichier lié : ${linked}` : 'aucun fichier .mdk lié');
     status.textContent = parts.join(' — ');
-    status.classList.toggle('linked', !!deckfs.saveHandleName());
+    status.classList.toggle('linked', !!linked);
   };
   updateStatus();
 

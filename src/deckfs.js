@@ -49,9 +49,20 @@ export function applyDeckImages(container) {
 let versions = [];              // [{ name, md }] — versions antérieures de deck.md
 let lastSavedMd = null;         // dernier deck.md écrit sur disque (pour l'archivage)
 let saveHandle = null;          // FileSystemFileHandle du deck courant (.mdk)
+let saveDeckId = null;          // ID du deck auquel saveHandle appartient
 
 export const hasSaveHandle = () => !!saveHandle;
 export const saveHandleName = () => (saveHandle ? saveHandle.name : null);
+
+/** Nom du fichier .mdk lié à un deck (sans demander de permission), ou null. */
+export async function getLinkedFileName(deckId) {
+  if (!deckId) return null;
+  if (saveHandle && saveDeckId === deckId) return saveHandle.name;
+  try {
+    const h = await idbGet('save:' + deckId);
+    return h?.name ?? null;
+  } catch { return null; }
+}
 
 /* ---------- persistance du handle fichier (IndexedDB) ----------
    Le handle .mdk est mémorisé par ID de deck : « Enregistrer » écrit
@@ -94,22 +105,19 @@ async function idbGet(key) {
 export async function rememberSaveHandle(deckId, handle) {
   if (!deckId || !handle) return;
   saveHandle = handle;
+  saveDeckId = deckId;
   try { await idbSet('save:' + deckId, handle); } catch { /* IndexedDB indisponible : session seulement */ }
 }
 
 /** Restaure le handle .mdk mémorisé pour ce deck (à l'entrée dans la page Création). */
 export async function restoreSaveHandle(deckId) {
-  if (saveHandle || !deckId) return;
+  if (!deckId) return;
+  if (saveHandle && saveDeckId === deckId) return;
+  saveHandle = null;
+  saveDeckId = null;
   try {
     const h = await idbGet('save:' + deckId);
-    if (h && typeof h.queryPermission === 'function') {
-      const perm = await h.queryPermission({ mode: 'readwrite' });
-      if (perm === 'granted') { saveHandle = h; return; }
-      /* 'prompt' : le navigateur demandera à l'écriture ; on garde le handle. */
-      saveHandle = h;
-    } else if (h) {
-      saveHandle = h;
-    }
+    if (h) { saveHandle = h; saveDeckId = deckId; }
   } catch { /* IndexedDB indisponible : pas de restauration */ }
 }
 
@@ -309,7 +317,8 @@ export async function saveDeckAs(deck) {
 
 /** Enregistrer : réutilise l'emplacement en cours (handle mémorisé pour ce deck). */
 export async function saveDeck(deck) {
-  if (!saveHandle && deck.id) await restoreSaveHandle(deck.id);
+  /* Handle lié à CE deck uniquement (sinon on écrirait dans le fichier d'un autre deck). */
+  if (!saveHandle || saveDeckId !== deck.id) await restoreSaveHandle(deck.id);
   if (saveHandle) {
     const blob = await buildMdkBlob(deck);
     try {
@@ -321,19 +330,29 @@ export async function saveDeck(deck) {
         const perm = await saveHandle.requestPermission
           ? await saveHandle.requestPermission({ mode: 'readwrite' })
           : 'granted';
-        if (perm !== 'granted') { saveHandle = null; return saveDeckAs(deck); }
+        if (perm !== 'granted') {
+          saveHandle = null; saveDeckId = null;
+          const r = await saveDeckAs(deck); return { ...r, reason: 'permission-refusée' };
+        }
       }
       const w = await saveHandle.createWritable();
       await w.write(blob);
       await w.close();
       return { filename: saveHandle.name, where: 'handle' };
     } catch (e) {
-      if (e.name === 'NotAllowedError') { saveHandle = null; return saveDeckAs(deck); } // permission refusée : redemander
-      if (e.name === 'NotFoundError') { saveHandle = null; return saveDeckAs(deck); }   // fichier supprimé/déplacé
+      if (e.name === 'NotAllowedError') {
+        saveHandle = null; saveDeckId = null;
+        const r = await saveDeckAs(deck); return { ...r, reason: 'permission-refusée' };
+      }
+      if (e.name === 'NotFoundError') {   // fichier supprimé ou déplacé
+        saveHandle = null; saveDeckId = null;
+        const r = await saveDeckAs(deck); return { ...r, reason: 'fichier-introuvable' };
+      }
       throw e;
     }
   }
-  return saveDeckAs(deck);
+  const r = await saveDeckAs(deck);
+  return { ...r, reason: 'aucun-fichier-lié' };   // première sauvegarde .mdk de ce deck
 }
 
 function downloadBlob(blob, filename) {
