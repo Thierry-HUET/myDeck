@@ -64,6 +64,47 @@ export async function getLinkedFileName(deckId) {
   } catch { return null; }
 }
 
+/* ---------- dossier des decks (bibliothèque) ----------
+   Choisi UNE fois ; tous les « Enregistrer » y écrivent
+   directement <nom du deck>.mdk, sans jamais rouvrir l'explorateur. */
+
+let libHandle = null;   // FileSystemDirectoryHandle du dossier des decks
+
+export async function getLibraryName() {
+  if (libHandle) return libHandle.name;
+  try { const h = await idbGet('library'); return h?.name ?? null; } catch { return null; }
+}
+
+async function ensureLibrary() {
+  if (libHandle) return libHandle;
+  try {
+    const h = await idbGet('library');
+    if (!h) return null;
+    if (typeof h.queryPermission === 'function') {
+      let p = await h.queryPermission({ mode: 'readwrite' });
+      if (p !== 'granted' && h.requestPermission) {
+        p = await h.requestPermission({ mode: 'readwrite' });   // demandée au clic : activation utilisateur
+      }
+      if (p !== 'granted') return null;
+    }
+    libHandle = h;
+    return h;
+  } catch { return null; }
+}
+
+async function chooseLibrary() {
+  if (!('showDirectoryPicker' in window)) return null;
+  try {
+    const h = await window.showDirectoryPicker({ id: 'mydeck-library', mode: 'readwrite' });
+    await idbSet('library', h);
+    libHandle = h;
+    return h;
+  } catch (e) {
+    if (e.name === 'AbortError') return null;
+    throw e;
+  }
+}
+
 /* ---------- persistance du handle fichier (IndexedDB) ----------
    Le handle .mdk est mémorisé par ID de deck : « Enregistrer » écrit
    directement à l'endroit en cours, y compris après rechargement
@@ -317,42 +358,48 @@ export async function saveDeckAs(deck) {
 
 /** Enregistrer : réutilise l'emplacement en cours (handle mémorisé pour ce deck). */
 export async function saveDeck(deck) {
-  /* Handle lié à CE deck uniquement (sinon on écrirait dans le fichier d'un autre deck). */
+  /* 1) Fichier .mdk spécifique lié à ce deck (issu d'« Ouvrir » ou « Enregistrer sous »). */
   if (!saveHandle || saveDeckId !== deck.id) await restoreSaveHandle(deck.id);
   if (saveHandle) {
     const blob = await buildMdkBlob(deck);
     try {
-      /* Permission à revalider : la demander maintenant (le clic fournit
-         l'activation utilisateur) pour écrire à l'endroit en cours
-         sans rouvrir l'explorateur. */
       if (typeof saveHandle.queryPermission === 'function'
           && await saveHandle.queryPermission({ mode: 'readwrite' }) !== 'granted') {
-        const perm = await saveHandle.requestPermission
+        const perm = saveHandle.requestPermission
           ? await saveHandle.requestPermission({ mode: 'readwrite' })
           : 'granted';
-        if (perm !== 'granted') {
-          saveHandle = null; saveDeckId = null;
-          const r = await saveDeckAs(deck); return { ...r, reason: 'permission-refusée' };
-        }
+        if (perm !== 'granted') { saveHandle = null; saveDeckId = null; /* → dossier des decks */ }
       }
-      const w = await saveHandle.createWritable();
-      await w.write(blob);
-      await w.close();
-      return { filename: saveHandle.name, where: 'handle' };
+      if (saveHandle) {
+        const w = await saveHandle.createWritable();
+        await w.write(blob);
+        await w.close();
+        return { filename: saveHandle.name, where: 'handle' };
+      }
     } catch (e) {
-      if (e.name === 'NotAllowedError') {
-        saveHandle = null; saveDeckId = null;
-        const r = await saveDeckAs(deck); return { ...r, reason: 'permission-refusée' };
-      }
-      if (e.name === 'NotFoundError') {   // fichier supprimé ou déplacé
-        saveHandle = null; saveDeckId = null;
-        const r = await saveDeckAs(deck); return { ...r, reason: 'fichier-introuvable' };
-      }
-      throw e;
+      if (e.name === 'NotAllowedError' || e.name === 'NotFoundError') {
+        saveHandle = null; saveDeckId = null;   // → dossier des decks
+      } else throw e;
     }
   }
-  const r = await saveDeckAs(deck);
-  return { ...r, reason: 'aucun-fichier-lié' };   // première sauvegarde .mdk de ce deck
+
+  /* 2) Dossier des decks : écriture directe — aucun sélecteur une fois le dossier choisi. */
+  let lib = await ensureLibrary();
+  if (!lib) lib = await chooseLibrary();
+  if (!lib) return { cancelled: true };
+
+  const blob = await buildMdkBlob(deck);
+  const filename = `${safeName(deck.name)}.mdk`;
+  try {
+    const fh = await lib.getFileHandle(filename, { create: true });
+    const w = await fh.createWritable();
+    await w.write(blob);
+    await w.close();
+    return { filename, where: 'library' };
+  } catch (e) {
+    if (e.name === 'NotAllowedError') { libHandle = null; return { cancelled: true, reason: 'permission-refusée' }; }
+    throw e;
+  }
 }
 
 function downloadBlob(blob, filename) {

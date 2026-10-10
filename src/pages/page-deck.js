@@ -58,7 +58,8 @@ export function mount(app) {
     const parts = [];
     parts.push(deck ? `Deck en cache : « ${deck.name} »` : 'Aucun deck en cache');
     const linked = deck ? await deckfs.getLinkedFileName(deck.id) : null;
-    parts.push(linked ? `fichier lié : ${linked}` : 'aucun fichier .mdk lié');
+    const lib = await deckfs.getLibraryName();
+    parts.push(linked ? `fichier lié : ${linked}` : (lib ? `dossier des decks : ${lib}` : 'dossier des decks non choisi'));
     status.textContent = parts.join(' — ');
     status.classList.toggle('linked', !!linked);
   };
@@ -113,7 +114,7 @@ export function mount(app) {
       updateStatus();
       alert(r.where === 'download'
         ? `Deck « ${deck.name} » enregistré : ${r.filename} (téléchargement).`
-        : `Deck « ${deck.name} » enregistré dans ${r.filename}.`);
+        : `Deck « ${deck.name} » enregistré : ${r.filename}.`);
     } catch (e) {
       alert('Enregistrement impossible : ' + e.message);
     }

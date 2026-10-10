@@ -2,6 +2,14 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.7.0] — 2026-10-10
+
+### Ajouté
+
+- **Dossier des decks (bibliothèque)** : réponse définitive à l'ouverture systématique du sélecteur. Au premier « Enregistrer », myDeck demande **une seule fois** un dossier ; ensuite, tous les « Enregistrer » (page Création ou Deck, tous decks confondus) écrivent directement `<nom du deck>.mdk` dans ce dossier — **sans jamais rouvrir l'explorateur**, y compris après rechargement (permission re-demandée par une simple confirmation native au pire).
+- Ordre d'écriture : fichier `.mdk` spécifique lié au deck (issu d'« Ouvrir » ou « Enregistrer sous ») en priorité, sinon dossier des decks.
+- Statut de la page Deck et info-bulle du bouton Enregistrer : affichent le dossier des decks ou le fichier lié.
+
 ## [0.6.5] — 2026-10-10
 
 ### Corrigé

@@ -91,7 +91,7 @@ L'extension **`.mdk`** est propre à myDeck ; l'archive reste un ZIP standard, l
 
 - **Nouveau deck** : crée un deck vierge (nom demandé) dans le cache et ouvre la page Création.
 - **Ouvrir (.mdk)…** : lit un fichier `.mdk` (`showOpenFilePicker`, repli sélecteur classique), restaure `deck.md`, `style.css`, les images et les versions dans le cache. Un deck homonyme existant est mis à jour au lieu d'être dupliqué.
-- **Enregistrer** : écrit le deck dans le fichier `.mdk` du dernier « Enregistrer sous » de la session ; sinon se comporte comme « Enregistrer sous ».
+- **Enregistrer** : écrit le deck sans jamais ouvrir d'explorateur une fois le **dossier des decks** désigné (demandé une seule fois au premier enregistrement, mémorisé dans IndexedDB). Priorité : fichier `.mdk` spécifique lié au deck (issu d'« Ouvrir » ou « Enregistrer sous »), sinon `<nom du deck>.mdk` dans le dossier des decks.
 - **Enregistrer sous…** : choisit l'emplacement (`showSaveFilePicker`, repli téléchargement) et écrit `<nom du deck>.mdk`. Si le Markdown a changé depuis la dernière écriture, l'ancien `deck.md` est archivé dans `versions/deck-AAAAMMJJ_hhmmss.md` à l'intérieur de l'archive (10 dernières versions conservées).
 - **Exporter (.zip)** : télécharge la même arborescence sous forme d'archive ZIP standard, lisible partout.
 - ────────────
