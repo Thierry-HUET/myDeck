@@ -2,6 +2,12 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.6.1] — 2026-10-10
+
+### Corrigé
+
+- **Bouton « Enregistrer » de la page Création désormais opérationnel** : il enregistre le deck dans le cache navigateur **puis** dans le fichier `.mdk` — réutilise l'emplacement du dernier « Enregistrer sous » de la session, sinon ouvre le choix d'emplacement. Retour visuel distinct (« ✓ Enregistré (.mdk) » / « ✓ .mdk téléchargé » / « ✓ Enregistré (cache) »).
+
 ## [0.6.0] — 2026-10-10
 
 ### Modifié

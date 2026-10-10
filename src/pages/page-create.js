@@ -5,9 +5,9 @@
    • vertical   : [ WYSIWYG / éditeurs MD|CSS côte à côte ]
    Tous les containers sont redimensionnables par splitters.
    ============================================================ */
-import { getDecks, getDeck, getSettings, saveSettings, saveDeck, newDeck } from '../store.js';
+import { getDecks, getDeck, getSettings, saveSettings, saveDeck as storeDeck, newDeck } from '../store.js';
 import { splitSlides, renderSlideInto, applyDeckCss } from '../md2slides.js';
-import { applyDeckImages } from '../deckfs.js';
+import { applyDeckImages, saveDeck as mdkSave, saveDeckAs, hasSaveHandle } from '../deckfs.js';
 
 const DEFAULT_LAYOUT = { mode: 'horizontal', main: 50, sub: 50 };
 
@@ -147,12 +147,24 @@ export function mount(app) {
     update();
   });
 
-  app.querySelector('#btn-save').addEventListener('click', () => {
-    saveDeck({ ...deck, md: edMd.value, css: edCss.value });
-    dirty = false;
+  app.querySelector('#btn-save').addEventListener('click', async () => {
+    const current = { ...deck, md: edMd.value, css: edCss.value };
+    storeDeck(current);            // 1) cache navigateur
     const b = app.querySelector('#btn-save');
-    b.textContent = '✓ Enregistré';
-    setTimeout(() => (b.textContent = '💾 Enregistrer'), 1200);
+    b.disabled = true;
+    b.textContent = '… Enregistrement';
+    let msg = '✓ Enregistré (cache)';
+    try {
+      const r = hasSaveHandle() ? await mdkSave(current) : await saveDeckAs(current);
+      if (r && !r.cancelled) {
+        msg = r.where === 'download' ? '✓ .mdk téléchargé' : '✓ Enregistré (.mdk)';
+      }
+    } catch (e) {
+      if (e && e.name !== 'AbortError') { alert('Enregistrement .mdk impossible : ' + e.message); }
+    }
+    dirty = false;
+    b.textContent = msg;
+    setTimeout(() => { b.textContent = '💾 Enregistrer'; b.disabled = false; }, 1200);
   });
 
   app.querySelector('#btn-new').addEventListener('click', () => {
