@@ -2,6 +2,14 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.6.2] — 2026-10-10
+
+### Ajouté
+
+- **Emplacement en cours mémorisé** : le handle du fichier `.mdk` est persisté dans IndexedDB, lié à l'ID du deck. Si un deck est déjà en cours (ouvert ou enregistré), « Enregistrer » (menu Deck ou page Création) écrit **directement à l'endroit en cours**, y compris après rechargement de la page — sans redemander l'emplacement.
+- À l'**ouverture** d'un `.mdk`, le fichier est automatiquement lié au deck : le premier « Enregistrer » suit l'emplacement d'origine.
+- Repli : permission retirée ou fichier supprimé/déplacé → l'emplacement est redemandé proprement.
+
 ## [0.6.1] — 2026-10-10
 
 ### Corrigé

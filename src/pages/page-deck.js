@@ -96,6 +96,7 @@ export function mount(app) {
         ? { ...existing, md: d.md, css: d.css }
         : { id: crypto.randomUUID(), name: d.name, md: d.md, css: d.css };
       storeDeck(deck);
+      if (d.handle) await deckfs.rememberSaveHandle(deck.id, d.handle); // « Enregistrer » écrira à l'endroit en cours
       updateStatus();
       location.hash = '#/create';
     } catch (e) {

@@ -48,10 +48,70 @@ export function applyDeckImages(container) {
 
 let versions = [];              // [{ name, md }] — versions antérieures de deck.md
 let lastSavedMd = null;         // dernier deck.md écrit sur disque (pour l'archivage)
-let saveHandle = null;          // FileSystemFileHandle du dernier « Enregistrer sous »
+let saveHandle = null;          // FileSystemFileHandle du deck courant (.mdk)
 
 export const hasSaveHandle = () => !!saveHandle;
 export const saveHandleName = () => (saveHandle ? saveHandle.name : null);
+
+/* ---------- persistance du handle fichier (IndexedDB) ----------
+   Le handle .mdk est mémorisé par ID de deck : « Enregistrer » écrit
+   directement à l'endroit en cours, y compris après rechargement
+   (permission ré-accordée silencieusement par le navigateur si
+   l'utilisateur a coché « autoriser à chaque fois » ou déjà validé). */
+
+const IDB_NAME = 'mydeck';
+const IDB_STORE = 'handles';
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbSet(key, value) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function idbGet(key) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const r = tx.objectStore(IDB_STORE).get(key);
+    r.onsuccess = () => resolve(r.result ?? null);
+    r.onerror = () => reject(r.error);
+  });
+}
+
+export async function rememberSaveHandle(deckId, handle) {
+  if (!deckId || !handle) return;
+  saveHandle = handle;
+  try { await idbSet('save:' + deckId, handle); } catch { /* IndexedDB indisponible : session seulement */ }
+}
+
+/** Restaure le handle .mdk mémorisé pour ce deck (à l'entrée dans la page Création). */
+export async function restoreSaveHandle(deckId) {
+  if (saveHandle || !deckId) return;
+  try {
+    const h = await idbGet('save:' + deckId);
+    if (h && typeof h.queryPermission === 'function') {
+      const perm = await h.queryPermission({ mode: 'readwrite' });
+      if (perm === 'granted') { saveHandle = h; return; }
+      /* 'prompt' : le navigateur demandera à l'écriture ; on garde le handle. */
+      saveHandle = h;
+    } else if (h) {
+      saveHandle = h;
+    }
+  } catch { /* IndexedDB indisponible : pas de restauration */ }
+}
 
 /* ---------- gestion des versions du deck.md ---------- */
 
@@ -229,14 +289,15 @@ export async function saveDeckAs(deck) {
   const filename = `${safeName(deck.name)}.mdk`;
   if ('showSaveFilePicker' in window) {
     try {
-      saveHandle = await window.showSaveFilePicker({
+      const h = await window.showSaveFilePicker({
         suggestedName: filename,
         types: [{ description: 'Deck myDeck (.mdk)', accept: { 'application/zip': ['.mdk'] } }],
       });
-      const w = await saveHandle.createWritable();
+      await rememberSaveHandle(deck.id, h);
+      const w = await h.createWritable();
       await w.write(blob);
       await w.close();
-      return { filename, where: 'picker' };
+      return { filename: h.name, where: 'picker' };
     } catch (e) {
       if (e.name === 'AbortError') return { cancelled: true };
       throw e;
@@ -246,8 +307,9 @@ export async function saveDeckAs(deck) {
   return { filename, where: 'download' };
 }
 
-/** Enregistrer : réutilise l'emplacement du dernier « Enregistrer sous » de la session. */
+/** Enregistrer : réutilise l'emplacement en cours (handle mémorisé pour ce deck). */
 export async function saveDeck(deck) {
+  if (!saveHandle && deck.id) await restoreSaveHandle(deck.id);
   if (saveHandle) {
     const blob = await buildMdkBlob(deck);
     try {
@@ -256,8 +318,9 @@ export async function saveDeck(deck) {
       await w.close();
       return { filename: saveHandle.name, where: 'handle' };
     } catch (e) {
-      if (e.name === 'NotAllowedError') saveHandle = null; // fichier déplacé/supprimé
-      else throw e;
+      if (e.name === 'NotAllowedError') { saveHandle = null; return saveDeckAs(deck); } // permission retirée : redemander
+      if (e.name === 'NotFoundError') { saveHandle = null; return saveDeckAs(deck); }   // fichier supprimé/déplacé
+      throw e;
     }
   }
   return saveDeckAs(deck);
@@ -282,26 +345,27 @@ async function pickMdkFile() {
         types: [{ description: 'Deck myDeck (.mdk)', accept: { 'application/zip': ['.mdk'] } }],
         multiple: false,
       });
-      return await fh.getFile();
+      return { file: await fh.getFile(), handle: fh };
     } catch (e) {
       if (e.name === 'AbortError') return null;
       throw e;
     }
   }
-  /* Repli : sélecteur de fichier classique */
+  /* Repli : sélecteur de fichier classique (pas de handle) */
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.mdk,application/zip';
-    input.onchange = () => resolve(input.files[0] || null);
+    input.onchange = () => resolve(input.files[0] ? { file: input.files[0], handle: null } : null);
     input.click();
   });
 }
 
 /** Ouvre un fichier .mdk, restaure le deck dans le cache et retourne ses données. */
 export async function openDeck() {
-  const file = await pickMdkFile();
-  if (!file) return null;
+  const picked = await pickMdkFile();
+  if (!picked) return null;
+  const { file, handle } = picked;
   const entries = await unzip(await file.arrayBuffer());
   const dec = (n) => (entries.has(n) ? new TextDecoder().decode(entries.get(n)) : '');
   let meta = null;
@@ -329,7 +393,7 @@ export async function openDeck() {
   versions = versions.slice(-MAX_VERSIONS);
   lastSavedMd = md;
   const deckName = file.name.replace(/\.mdk$/i, '') || meta?.name || 'Deck';
-  return { name: deckName, md, css, format };
+  return { name: deckName, md, css, format, handle };
 }
 
 /* ============================================================
