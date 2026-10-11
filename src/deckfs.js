@@ -403,6 +403,13 @@ export async function saveDeck(deck) {
 
   /* 2) Dossier des decks : écriture directe — aucun sélecteur une fois le dossier choisi. */
   let lib = await ensureLibrary();
+  if (!lib && !('showDirectoryPicker' in window)) {
+    /* Repli : File System Access API indisponible (Firefox, Safari...) -> telechargement du .mdk. */
+    const blob = await buildMdkBlob(deck);
+    const filename = `${safeName(deck.name)}.mdk`;
+    downloadBlob(blob, filename);
+    return { filename, where: 'download' };
+  }
   if (!lib) lib = await chooseLibrary();
   if (!lib) return { cancelled: true };
 

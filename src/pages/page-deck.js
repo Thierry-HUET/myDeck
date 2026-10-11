@@ -118,7 +118,8 @@ export function mount(app) {
     if (!deck) return alert('Aucun deck courant.');
     try {
       const r = await deckfs.saveDeck(deck);
-      if (!r || r.cancelled) return;
+      if (!r) return;
+      if (r.cancelled) { alert('Enregistrement annulé — le deck reste dans le cache du navigateur uniquement.'); return; }
       updateStatus();
       alert(r.where === 'download'
         ? `Deck « ${deck.name} » enregistré : ${r.filename} (téléchargement).`

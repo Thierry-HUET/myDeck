@@ -2,6 +2,12 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.10.3] — 2026-10-11
+
+### Corrigé
+
+- **« Enregistrer » n'écrivait pas sur le disque** hors Chrome/Edge/Opera : sans File System Access API (`showDirectoryPicker`), le bouton se contentait du cache navigateur — aucun fichier, aucun téléchargement, aucun message. Repli automatique sur le **téléchargement du `.mdk`** (comme « Enregistrer sous »), et message explicite (« Cache seulement — .mdk non écrit ») si l'emplacement est annulé dans la page Création.
+
 ## [0.10.2] — 2026-10-11
 
 ### Corrigé

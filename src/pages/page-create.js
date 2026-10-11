@@ -186,6 +186,8 @@ export function mount(app) {
         if (r.where === 'download') msg = '✓ .mdk téléchargé';
         else msg = r.folder ? `✓ ${r.folder}/${r.filename}` : `✓ ${r.filename}`;
         if (r.reason) alert(`Info : ${r.reason}`);
+      } else if (r && r.cancelled) {
+        msg = '✓ Cache seulement — .mdk non écrit (annulé)';
       }
       refreshLinked();
     } catch (e) {
