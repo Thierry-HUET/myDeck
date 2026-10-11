@@ -2,6 +2,12 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.10.1] — 2026-10-11
+
+### Corrigé
+
+- **Régression interface (v0.9.1)** : `src/styles/global.css` avait été écrasé et ne contenait plus que la règle `.insert-group` — toute la mise en page de l'application était perdue (barre supérieure, page Création, splitters, cartes, page Slides). Feuille restaurée depuis v0.8.0, règle `.insert-group` conservée.
+
 ## [0.10.0] — 2026-10-10
 
 ### Modifié
