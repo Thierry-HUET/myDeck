@@ -1,7 +1,7 @@
 {
   "name": "mydeck",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.10.4",
   "description": "Créez et présentez des slides type PowerPoint à partir de fichiers Markdown et CSS",
   "type": "module",
   "license": "Apache-2.0",

@@ -138,6 +138,7 @@ export function mount(app) {
   file.addEventListener('change', async () => {
     try {
       const data = JSON.parse(await file.files[0].text());
+      if (!confirm('L\'import remplace les decks et paramètres actuels. Continuer ?')) { file.value = ''; return; }
       if (data.decks) localStorage.setItem('mydeck.decks', JSON.stringify(data.decks));
       if (data.settings) localStorage.setItem('mydeck.settings', JSON.stringify(data.settings));
       location.reload();

@@ -85,6 +85,7 @@ export function mount(app) {
     sp.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       sp.setPointerCapture(e.pointerId);
+      sp.classList.add('active');
       const vertical = sp.dataset.split === 'main'
         ? layout.mode === 'vertical'      // axe du splitter principal
         : layout.mode === 'horizontal';   // axe du splitter interne (inverse)
@@ -103,6 +104,7 @@ export function mount(app) {
         sp.removeEventListener('pointermove', move);
         sp.removeEventListener('pointerup', up);
         sp.removeEventListener('pointercancel', up);
+        sp.classList.remove('active');
         persistLayout();
       };
       sp.addEventListener('pointermove', move);

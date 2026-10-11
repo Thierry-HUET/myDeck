@@ -160,7 +160,7 @@ Le choix d'emplacement (`showSaveFilePicker` / `showOpenFilePicker`) repose sur 
 - **Polices** : menus déroulants alimentés par les polices détectées dans le navigateur (`document.fonts.check` sur une liste candidate + familles génériques). L'import de polices extérieures (Google Fonts) est prévu dans la TODO.
 - **Disposition (page Création)** : sélecteur du mode (horizontal / vertical), persisté dans `settings.layout.mode`.
 - Gestion des decks : liste, suppression.
-- Export/import JSON (decks + settings).
+- Export/import JSON (decks + settings) ; l'import demande confirmation (remplacement complet).
 
 ## 8. Contraintes techniques
 
@@ -168,10 +168,10 @@ Le choix d'emplacement (`showSaveFilePicker` / `showOpenFilePicker`) repose sur 
 - **Aucun backend** : tout est client ; `npm run dev` (Vite) pour le développement, `npm run build` pour la production (dossier `dist/` déployable sur tout hébergeur statique).
 - **Dépendances** : `marked` (rendu Markdown) ; `vite` en dev.
 
-## 7. Compatibilité
+## 9. Compatibilité
 
 `legacy/` conserve le visualiseur statique v0.1 (index.html + app.js + style.css), fonctionnel sans Node.
 
-## 8. Évolutions
+## 10. Évolutions
 
 Voir `TODO.md`.

@@ -22,7 +22,7 @@
 ## 🧪 Robustesse
 
 - [ ] **Marquage du `.md` local** : fallback `embedded deck` si aucun serveur HTTP n'est détecté (deck par défaut inclus dans `index.html`).
-- [ ] **Mode hors-ligne complet** : embarquer marked.js localement (fin de la dépendance CDN) et ajouter un manifeste PWA + service worker.
+- [ ] **Mode hors-ligne complet** : ajouter un manifeste PWA + service worker (marked est déjà embarqué via npm).
 - [ ] **Tests navigateur** automatisés (Playwright) : navigation, découpage, impression.
 
 ## 📦 Distribution
@@ -37,3 +37,7 @@
 - [x] Navigation clavier / tactile / clic (v0.1.0)
 - [x] Plein écran, vue d'ensemble, deep-link (v0.1.0)
 - [x] Impression 1 slide/page (v0.1.0)
+- [x] Page Création : layouts horizontal/vertical, splitters (v0.5+)
+- [x] Format deck `.mdk` (ZIP), dossier des decks, versions (v0.6–v0.7)
+- [x] Templates de slides `::{nom}` (v0.9.0)
+- [x] Rôles et directives MyST (v0.10.0)

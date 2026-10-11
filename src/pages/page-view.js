@@ -2,7 +2,7 @@
    page-view.js — Visualisation (plein écran, navigation, impression)
    ============================================================ */
 import { getDecks, getDeck, getSettings } from '../store.js';
-import { splitSlides, renderSlideInto, applyDeckCss, md2html } from '../md2slides.js';
+import { splitSlides, renderSlideInto, applyDeckCss } from '../md2slides.js';
 import { applyDeckImages } from '../deckfs.js';
 
 export function mount(app) {
@@ -70,8 +70,9 @@ export function mount(app) {
       const t = document.createElement('div');
       t.className = 'thumb' + (i === idx ? ' active' : '');
       const inner = document.createElement('div');
-      inner.className = 'thumb-content';
-      inner.innerHTML = md2html(md);
+      inner.className = 'slide thumb-content';
+      renderSlideInto(inner, md);
+      applyDeckImages(inner);
       t.appendChild(inner);
       t.addEventListener('click', () => { toggleOverview(false); goTo(i); });
       overview.appendChild(t);
@@ -95,7 +96,8 @@ export function mount(app) {
     slides.forEach((md) => {
       const s = document.createElement('section');
       s.className = 'slide';
-      s.innerHTML = md2html(md);
+      renderSlideInto(s, md);
+      applyDeckImages(s);
       wrap.appendChild(s);
     });
     app.appendChild(wrap);

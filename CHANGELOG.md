@@ -2,6 +2,18 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.10.4] — 2026-10-11
+
+### Corrigé
+
+- **Vue d'ensemble** : miniatures rendues dans un élément `.slide` via `renderSlideInto` (thème, templates, rôles et directives appliqués ; marqueurs `::{…}` plus affichés en texte brut).
+- **Impression** : même moteur de rendu (templates, images du deck).
+- Retour visuel du splitter pendant le glissement (classe `.active`).
+- Noms des versions alignés sur la spécification : `deck-AAAAMMJJ_hhmmss.md`.
+- Import JSON : confirmation avant remplacement.
+- `package.json` aligné sur `VERSION`.
+- Documentation : README mis à jour, numérotation de SPECIFICATION.md corrigée, TODO nettoyé.
+
 ## [0.10.3] — 2026-10-11
 
 ### Corrigé
