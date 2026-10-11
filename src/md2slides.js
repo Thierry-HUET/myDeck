@@ -26,7 +26,10 @@ const DIRECTIVE = /(^|\n)([ \t]*)```\{([\w-]+)\}[ \t]*\n([\s\S]*?)\n```\s*(?=\n|
 function applyDirectives(src) {
   return src.replace(DIRECTIVE, (m, nl, indent, name, body) => {
     /* le corps de la directive est rendu comme Markdown inline */
-    const inner = marked.parseInline(body.trim());
+    /* rôles du corps appliqués AVANT le rendu Markdown inline
+       (sinon les `backticks` du rôle sont transformés en <code> par marked
+        et la syntaxe {role}`mot` n'est plus reconnue) */
+    const inner = marked.parseInline(applyInlineRoles(body.trim()));
     return `${nl}${indent}<p class="dir-${name}">${inner}</p>`;
   });
 }

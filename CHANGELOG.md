@@ -2,6 +2,12 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/) ; versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [0.10.2] — 2026-10-11
+
+### Corrigé
+
+- **Rôles inline dans les directives** : `{accent}`mot`` à l'intérieur d'un bloc ```` ```{highlight} ```` n'était pas traité — `marked` transformait d'abord les backticks du rôle en `<code>`, empêchant sa reconnaissance. Les rôles du corps d'une directive sont désormais appliqués avant le rendu Markdown inline.
+
 ## [0.10.1] — 2026-10-11
 
 ### Corrigé
